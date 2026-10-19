@@ -114,7 +114,7 @@ function tick(){const now=new Date(),c=now.toLocaleTimeString([],{hour:'2-digit'
 load();setInterval(load,60000);setInterval(tick,1000);
 // ---------- office canvas ----------
 let C=$('oc'),X=C.getContext('2d'),head=new Image();head.src='assets/robot_head.png';let W=1600,H=900,mob=false;
-function fit(){const r=$('stage').getBoundingClientRect();if(!r.width)return;mob=r.width<760;W=mob?800:1600;H=mob?1333:900;C.width=W;C.height=H;
+function fit(){const r=$('stage').getBoundingClientRect();mob=(r.width||innerWidth)<760;W=mob?800:1600;H=mob?1333:900;C.width=W;C.height=H;
  spots=mob?{desk:{x:400,y:1010},cooler:{x:690,y:1050},window:{x:180,y:1050},board:{x:560,y:1050},plant:{x:110,y:1080}}:{desk:{x:520,y:760},cooler:{x:330,y:780},window:{x:150,y:770},board:{x:300,y:760},plant:{x:70,y:800}};
  if(Bot.state==='sit'){Bot.x=spots.desk.x;Bot.y=spots.desk.y}}
 let spots={};addEventListener('resize',fit);
@@ -272,5 +272,7 @@ route();load();requestAnimationFrame(loop);setTimeout(()=>Bot.say('Welcome to th
 <script src="js/monitors.js" defer></script>
 <script src="js/livequotes.js" defer></script>
 <link rel="stylesheet" href="css/vsboard.css"><script src="js/vsboard.js" defer></script>
+<link rel="stylesheet" href="css/books.css"><script src="js/books.js" defer></script>
+<link rel="stylesheet" href="css/dock.css"><script src="js/dock.js" defer></script>
 <link rel="stylesheet" href="css/layout.css"><script src="js/layout.js" defer></script>
 </body></html>
