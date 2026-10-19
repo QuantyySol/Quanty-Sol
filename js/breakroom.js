@@ -226,7 +226,7 @@ setView('office');
  const p=O.toCanvas(e.clientX,e.clientY),d=officeDoor(),f=O.floorBounds(),w=O.mobile?78:96,h=O.mobile?190:230;if(p.x>d.x-w/2&&p.x<d.x+w/2&&p.y>f.yMin-h&&p.y<f.yMin)setView('brk')})}
 /* ---------- wandering ---------- */
 setInterval(()=>{const A=AG();[A.ledger,A.twitter,A.designer].forEach(a=>{if(!a||a.room==='brk'||a.toBrk||a.state!=='idle'||a.rush)return;const inB=[A.ledger,A.twitter,A.designer].filter(o=>o&&o.room==='brk').length;if(Math.random()<(inB<2?.55:.15))sendToBrk(a,null)})},12000);
-setTimeout(()=>sendToBrk(designer,null),1500);setTimeout(()=>sendToBrk(T(),null),5000);
+setTimeout(()=>enter(designer,null),300);setTimeout(()=>sendToBrk(T(),null),5000);
 /* new trade: everybody back to the desk */
 Desk.on('trade',()=>{const A=AG();Object.values(A).forEach(a=>{if(!a)return;a.toBrk=false;a.pending=null;if(a.room==='brk'){if(a.id==='quanty'){a.room=null;return}exit(a,true);a.say&&a.say(pick(['NEW TRADE! BACK TO THE DESK!','On my way!','Snack break over.']),2600)}})});
 /* ---------- breakroom lines + chat log ---------- */
