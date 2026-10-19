@@ -1,0 +1,42 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Uncle Quanty, PhD — Paper Trading Desk</title><style>
+:root{--bg:#07090a;--card:#0f1413;--line:#1d2a26;--ink:#e8f5ee;--mut:#7f948b;--g:#39ff88;--r:#ff5c6c}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(900px 400px at 20% -10%,#0f2a1d,var(--bg));color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif}
+.w{max-width:1100px;margin:0 auto;padding:20px}header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+h1{font-size:22px;margin:0}h1 b{color:var(--g)}.tag{font-size:12px;color:#000;background:var(--g);padding:3px 10px;border-radius:99px;font-weight:700}
+.office{display:flex;gap:20px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin:16px 0}
+.bot{flex:none;transition:transform .3s}
+.bubble{background:#0a1a12;border:1px solid var(--g);border-radius:14px;padding:12px 14px;color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}.c{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.k{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.08em}.v{font-size:26px;font-weight:700}.up{color:var(--g)}.dn{color:var(--r)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--r)}.dot.on{background:var(--g);box-shadow:0 0 10px var(--g)}
+h2{font-size:15px;color:var(--g);margin:22px 0 8px}ul{list-style:none;margin:0;padding:0}li{padding:8px 0;border-bottom:1px solid var(--line)}li small{color:var(--mut);margin-right:8px}
+svg.ch{width:100%;height:140px}footer{color:var(--mut);font-size:12px;margin-top:24px;text-align:center}</style></head><body><div class="w">
+<header><h1>Uncle Quanty, PhD — <b>Paper Trading Desk</b></h1><span class="tag">Paper trading only, not financial advice</span></header>
+<div class="office"><svg class="bot" width="110" height="110" viewBox="0 0 110 110"><ellipse cx="55" cy="58" rx="52" ry="14" fill="none" stroke="#39ff88" stroke-width="2" opacity=".6"/>
+<rect x="25" y="22" width="60" height="50" rx="14" fill="#101917" stroke="#39ff88" stroke-width="2"/><circle cx="43" cy="45" r="6" fill="#39ff88"/><circle cx="67" cy="45" r="6" fill="#39ff88"/>
+<path d="M44 60q11 7 22 0" stroke="#39ff88" stroke-width="2" fill="none"/><line x1="55" y1="22" x2="55" y2="10" stroke="#39ff88" stroke-width="2"/><circle cx="55" cy="8" r="4" fill="#39ff88"/>
+<rect x="38" y="78" width="34" height="18" rx="5" fill="#101917" stroke="#39ff88"/></svg>
+<div><div class="k"><span id="dot" class="dot"></span><span id="st">connecting…</span></div><div class="bubble" id="sp">…</div></div></div>
+<div class="grid"><div class="c"><div class="k">Paper bank</div><div class="v" id="bank">–</div><div id="usd" class="k"></div></div>
+<div class="c"><div class="k">P&amp;L since start</div><div class="v" id="pnl">–</div></div>
+<div class="c"><div class="k">Trades · win rate</div><div class="v" id="wr">–</div></div>
+<div class="c"><div class="k">Open positions</div><div class="v" id="no">–</div></div></div>
+<div class="c" style="margin-top:12px"><div class="k">Bank over time (SOL)</div><svg class="ch" id="ch" preserveAspectRatio="none"></svg></div>
+<h2>Open positions</h2><ul id="op"></ul><h2>Recent closes</h2><ul id="cl"></ul><h2>Desk activity</h2><ul id="fd"></ul>
+<footer>Simulated paper trades with a fake 1 SOL bank. No real money. Nothing here is a recommendation to buy or sell anything.</footer></div>
+<script>
+const $=i=>document.getElementById(i),e=s=>String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])),t=s=>s?new Date(s).toLocaleString():'';
+const sg=x=>(x>=0?'+':'')+x.toFixed(4);
+async function go(){try{const d=await (await fetch('desk.json?t='+Date.now(),{cache:'no-store'})).json();
+$('dot').className='dot'+(d.live?' on':'');$('st').textContent=d.live?'Live · updated '+t(d.last_update):'Desk paused';
+$('sp').textContent=d.speech||'';$('bank').textContent=(d.bank_sol??0).toFixed(4)+' SOL';$('usd').textContent=d.bank_usd?'≈ $'+d.bank_usd.toFixed(2):'';
+const p=d.pnl_sol??0;$('pnl').textContent=sg(p)+' SOL';$('pnl').className='v '+(p>=0?'up':'dn');
+const s=d.stats||{};$('wr').textContent=(s.trades||0)+' · '+Math.round((s.win_rate||0)*100)+'%';$('no').textContent=(d.open||[]).length;
+$('op').innerHTML=(d.open||[]).map(o=>`<li><small>${t(o.opened_at)}</small>Holding <b>${e(o.symbol)}</b> — put in ${o.cost_sol} SOL${o.pnl_pct!=null?`, now <span class="${o.pnl_pct>=0?'up':'dn'}">${o.pnl_pct}%</span>`:''}</li>`).join('')||'<li>Not holding anything right now.</li>';
+$('cl').innerHTML=(d.closed||[]).map(c=>`<li><small>${t(c.closed_at)}</small>Sold <b>${e(c.symbol)}</b> (${e(c.rule)}) <span class="${c.pnl_sol>=0?'up':'dn'}">${sg(c.pnl_sol)} SOL</span></li>`).join('')||'<li>No closed trades yet.</li>';
+$('fd').innerHTML=(d.feed||[]).map(f=>`<li><small>${t(f.ts)}</small>${e(f.text)}</li>`).join('');
+const h=d.history||[];if(h.length>1){const v=h.map(x=>x[1]),mn=Math.min(...v),mx=Math.max(...v)||1,r=(mx-mn)||1;
+$('ch').setAttribute('viewBox','0 0 100 40');$('ch').innerHTML=`<polyline fill="none" stroke="#39ff88" stroke-width=".6" points="${v.map((y,i)=>(i/(v.length-1)*100).toFixed(2)+','+(38-(y-mn)/r*36).toFixed(2)).join(' ')}"/>`}
+}catch(x){$('st').textContent='reconnecting…'}}go();setInterval(go,60000);
+</script></body></html>
