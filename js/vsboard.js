@@ -7,37 +7,33 @@ const O=Desk.office,QC='#39ff88',LC='#ffbf3f';
 const head=new Image();head.src='assets/robot_head.png';
 const rect=()=>O.mobile?{x:70,y:430,w:660,h:300}:{x:56,y:438,w:228,h:134},old=()=>O.mobile?{x:440,y:840,w:300,h:140}:{x:60,y:420,w:220,h:150};
 const pct=(b,s)=>((+b||0)/((+s)||1)-1)*100;
-function series(){const d=Desk.data||{},bh=d.bank_history||{},lb=d.ledger_book||{},now=Date.now();
- const map=(a,s)=>(Array.isArray(a)?a:[]).filter(p=>Array.isArray(p)&&p[1]!=null).map(p=>[Date.parse(p[0])||now,pct(p[1],s)]);
- let q=map(bh.quanty&&bh.quanty.length?bh.quanty:d.history,d.start_sol||1),l=map(bh.ledger,lb.start_sol||1);
- const B=window.DeskBooks?DeskBooks.get():null,qc=B?B.quanty.pct:pct(d.bank_sol,d.start_sol||1),lc=B?B.ledger.pct:(lb.bank_sol!=null?pct(lb.bank_sol,lb.start_sol||1):0);
- q.push([now,qc]);l.push([now,lc]);if(l.length<2)l.unshift([q.length?q[0][0]:now-6e5,0]);
- const s=d.stats||{};return{q,l,qc,lc,qw:Math.round(s.wins||0),ql:Math.round(s.losses||0),lw:lb.wins||0,ll:lb.losses||0}}
+const NM=['quanty','ledger','twitter'],COL={quanty:QC,ledger:LC,twitter:'#5cc8ff'},LAB={quanty:'QUANTY',ledger:'LEDGER',twitter:'TWITTER'};
+function series(){const B=window.DeskBooks;const o={rows:[]};
+ NM.forEach(n=>{const b=B&&B.book(n);if(!b||!b.traded)return;o.rows.push({n,c:COL[n],pts:B.series(n),cur:b.pct,w:b.wins,l:b.losses,live:b.live,dl:b.delayed})});
+ const g=n=>o.rows.find(r=>r.n===n);o.qc=g('quanty')?g('quanty').cur:0;o.lc=g('ledger')?g('ledger').cur:0;o.qw=g('quanty')?g('quanty').w:0;o.ql=g('quanty')?g('quanty').l:0;o.lw=g('ledger')?g('ledger').w:0;o.ll=g('ledger')?g('ledger').l:0;return o}
 const f=v=>(v>=0?'+':'')+v.toFixed(1)+'%';
 function face(X,x,y,r,who){if(who==='q'){X.save();X.beginPath();X.arc(x,y,r,0,7);X.clip();if(head.complete&&head.naturalWidth)X.drawImage(head,x-r,y-r,2*r,2*r);else{X.fillStyle='#0b1a12';X.fill()}X.restore()}
+ else if(who==='t'){X.fillStyle='#08141c';X.beginPath();X.arc(x,y,r,0,7);X.fill();X.fillStyle='#e6f7ff';X.fillRect(x-r*.45,y-r*.25,r*.25,r*.3);X.fillRect(x+r*.2,y-r*.25,r*.25,r*.3);X.strokeStyle='#e6f7ff';X.lineWidth=Math.max(1.2,r/9);X.beginPath();X.arc(x,y+r*.2,r*.3,.2,Math.PI-.2);X.stroke()}
  else{X.fillStyle='#1a1408';X.beginPath();X.arc(x,y,r,0,7);X.fill();X.strokeStyle=LC;X.lineWidth=Math.max(1.5,r/7);X.beginPath();X.arc(x-r*.38,y-r*.05,r*.3,0,7);X.moveTo(x+r*.68,y-r*.05);X.arc(x+r*.38,y-r*.05,r*.3,0,7);X.stroke();X.beginPath();X.moveTo(x-r*.65,y-r*.5);X.lineTo(x-r*.15,y-r*.38);X.moveTo(x+r*.65,y-r*.5);X.lineTo(x+r*.15,y-r*.38);X.stroke()}
- X.strokeStyle=who==='q'?QC:LC;X.lineWidth=2;X.shadowColor=X.strokeStyle;X.shadowBlur=8;X.beginPath();X.arc(x,y,r,0,7);X.stroke();X.shadowBlur=0}
+ X.strokeStyle=who==='q'?QC:who==='t'?'#5cc8ff':LC;X.lineWidth=2;X.shadowColor=X.strokeStyle;X.shadowBlur=8;X.beginPath();X.arc(x,y,r,0,7);X.stroke();X.shadowBlur=0}
 function crown(X,x,y,s){X.fillStyle='#ffd84a';X.beginPath();X.moveTo(x-s,y);X.lineTo(x-s,y-s*.9);X.lineTo(x-s*.5,y-s*.4);X.lineTo(x,y-s*1.1);X.lineTo(x+s*.5,y-s*.4);X.lineTo(x+s,y-s*.9);X.lineTo(x+s,y);X.closePath();X.fill()}
 /* draw the board into any ctx at x,y,w,h; big=true for the expanded view */
-function board(X,x,y,w,h,t,big){const S=series(),u=big?w/300:w/220,fs=n=>Math.round(n*u)+'px Inter,sans-serif';
+function board(X,x,y,w,h,t,big){const S=series(),u=big?Math.min(w/300,h/170):w/220,fs=n=>Math.round(n*u)+'px Inter,sans-serif',R=S.rows;
  X.save();X.fillStyle='#070d10';X.beginPath();X.roundRect(x,y,w,h,8*u);X.fill();X.strokeStyle='#2a3a40';X.lineWidth=2;X.stroke();
- const ar=10*u,top=y+16*u,lead=S.qc===S.lc?null:(S.qc>S.lc?'q':'l');
- face(X,x+16*u,top,ar,'q');face(X,x+w-16*u,top,ar,'l');
- if(lead)crown(X,lead==='q'?x+16*u:x+w-16*u,top-ar-1,6*u);
- X.textAlign='center';X.font='800 '+fs(11);X.fillStyle=QC;X.fillText('QUANTY',x+w/2-31*u,top+4*u);X.fillStyle='#8aa098';X.font='800 '+fs(10);X.fillText('vs',x+w/2,top+4*u);X.fillStyle=LC;X.font='800 '+fs(11);X.fillText('LEDGER',x+w/2+31*u,top+4*u);
- // chart
- const cx=x+8*u,cy=y+32*u,cw=w-16*u,ch=h-56*u,all=S.q.concat(S.l);let t0=Math.min(...all.map(p=>p[0])),t1=Math.max(...all.map(p=>p[0]));if(t1<=t0)t1=t0+1;
- let lo=Math.min(0,...all.map(p=>p[1])),hi=Math.max(0,...all.map(p=>p[1]));const pad=Math.max(1,(hi-lo)*.12);lo-=pad;hi+=pad;
- const px=v=>cx+(v-t0)/(t1-t0)*cw,py=v=>cy+ch-(v-lo)/(hi-lo)*ch;
- X.strokeStyle='#ffffff22';X.setLineDash([3*u,4*u]);X.lineWidth=1;X.beginPath();X.moveTo(cx,py(0));X.lineTo(cx+cw,py(0));X.stroke();X.setLineDash([]);
- [[S.q,QC,S.qc],[S.l,LC,S.lc]].forEach(([a,c,v])=>{if(!a.length)return;X.strokeStyle=c;X.lineWidth=2.2*u;X.shadowColor=c;X.shadowBlur=6;X.beginPath();a.forEach((p,i)=>i?X.lineTo(px(p[0]),py(p[1])):X.moveTo(px(p[0]),py(p[1])));X.stroke();X.shadowBlur=0;
-  const ex=px(a[a.length-1][0]),ey=py(v);X.fillStyle=c;X.beginPath();X.arc(ex,ey,2.8*u*(1+.25*Math.sin(t/300)),0,7);X.fill()});
- // value labels (keep apart)
- let qy=py(S.qc),ly=py(S.lc);if(Math.abs(qy-ly)<13*u){const m=(qy+ly)/2,s=qy<=ly?-1:1;qy=m+s*6.5*u;ly=m-s*6.5*u}
- X.textAlign='right';X.font='800 '+fs(11);[[f(S.qc),qy,QC],[f(S.lc),ly,LC]].forEach(([s,yy,c])=>{const tw=X.measureText(s).width+6*u;X.fillStyle='#070d10dd';X.fillRect(cx+cw-tw,yy-7*u,tw,13*u);X.fillStyle=c;X.fillText(s,cx+cw-3*u,yy+4*u)});
- // tally
- X.textAlign='left';X.font='700 '+fs(10);X.fillStyle=QC;X.fillText('W'+S.qw+' · L'+S.ql,x+8*u,y+h-8*u);X.textAlign='right';X.fillStyle=LC;X.fillText('W'+S.lw+' · L'+S.ll,x+w-8*u,y+h-8*u);
- X.textAlign='center';X.fillStyle='#8aa098';X.font='600 '+fs(big?8:9);X.fillText(big?'P&L % from 1 SOL · paper':'tap to expand',x+w/2,y+h-8*u);
+ const ar=9*u,top=y+15*u,lead=R.length>1?R.slice().sort((a,b)=>b.cur-a.cur)[0]:null,tied=lead&&R.filter(r=>Math.abs(r.cur-lead.cur)<1e-9).length>1;
+ const slots=NM.map((n,i)=>({n,x:x+w*(i+.5)/3}));
+ slots.forEach(sl=>{const r=R.find(z=>z.n===sl.n);X.globalAlpha=r?1:.4;face(X,sl.x-24*u,top,ar,sl.n[0]);if(r&&lead&&!tied&&lead.n===sl.n)crown(X,sl.x-24*u,top-ar-1,5.5*u);
+  X.textAlign='left';X.font='800 '+fs(10);X.fillStyle=COL[sl.n];X.fillText(LAB[sl.n],sl.x-12*u,top-1*u);X.font='800 '+fs(r||big?10:8);X.fillStyle=r?(r.cur<0?'#ff5c6c':COL[sl.n]):'#8aa098';X.fillText(r?f(r.cur):(big?'no trades yet':'no trades'),sl.x-12*u,top+9*u);X.globalAlpha=1});
+ const cx=x+8*u,cy=y+32*u,cw=w-16*u,ch=h-50*u,all=[].concat(...R.map(r=>r.pts));
+ if(all.length){let t0=Math.min(...all.map(p=>p[0])),t1=Math.max(...all.map(p=>p[0]));if(t1<=t0)t0=t1-1;
+  let lo=Math.min(0,...all.map(p=>p[1])),hi=Math.max(0,...all.map(p=>p[1]));const pad=Math.max(1,(hi-lo)*.12);lo-=pad;hi+=pad;
+  const px=v=>cx+(v-t0)/(t1-t0)*cw,py=v=>cy+ch-(v-lo)/(hi-lo)*ch;
+  X.strokeStyle='#ffffff22';X.setLineDash([3*u,4*u]);X.lineWidth=1;X.beginPath();X.moveTo(cx,py(0));X.lineTo(cx+cw,py(0));X.stroke();X.setLineDash([]);
+  R.forEach(r=>{const a=r.pts.length>1?r.pts:[[t0,0]].concat(r.pts);X.strokeStyle=r.c;X.lineWidth=2*u;X.shadowColor=r.c;X.shadowBlur=6;X.beginPath();a.forEach((p,i)=>i?X.lineTo(px(p[0]),py(p[1])):X.moveTo(px(p[0]),py(p[1])));X.stroke();X.shadowBlur=0;
+   X.fillStyle=r.c;X.beginPath();X.arc(px(a[a.length-1][0]),py(r.cur),2.6*u*(1+.25*Math.sin(t/300)),0,7);X.fill()})}
+ X.textAlign='left';X.font='700 '+fs(9);slots.forEach(sl=>{const r=R.find(z=>z.n===sl.n);if(r){X.fillStyle=COL[sl.n];X.fillText('W'+r.w+'·L'+r.l,sl.x-24*u,y+h-7*u)}});
+ const lv=R.some(r=>r.live),dl=R.some(r=>r.live&&r.dl);if(lv){const c=dl?'#f5b342':'#3fe07a';X.fillStyle=c;X.globalAlpha=dl?1:.55+.45*Math.sin(t/190);X.beginPath();X.arc(x+w-36*u,y+h-10*u,2.6*u,0,7);X.fill();X.globalAlpha=1;X.font='800 '+fs(7);X.fillText(dl?'DELAYED':'LIVE',x+w-31*u,y+h-7.5*u)}
+ if(!big){X.textAlign='right';X.fillStyle='#8aa098';X.font='600 '+fs(7);X.fillText('tap to expand',x+w-8*u,y+h-17*u)}
  X.restore();return S}
 /* office actor drawn behind everyone (y=-1), covering the old whiteboard */
 let pointing=0;
@@ -57,12 +53,12 @@ C.addEventListener('pointerdown',e=>{dn={x:e.clientX,y:e.clientY,t:performance.n
 C.addEventListener('pointerup',e=>{if(!dn)return;const m=Math.hypot(e.clientX-dn.x,e.clientY-dn.y)<8&&performance.now()-dn.t<450;dn=null;if(!m)return;const p=O.toCanvas(e.clientX,e.clientY),r=rect();if(p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h)open()});
 let ov=null,raf=0;
 function open(){if(ov)return;ov=document.createElement('div');ov.className='vs-ov';ov.setAttribute('role','dialog');ov.setAttribute('aria-label','Quanty vs Ledger');
- ov.innerHTML='<div class="vs-box"><button class="vs-x" aria-label="Close">×</button><canvas></canvas><p class="vs-note">Both books start at 1 SOL of pretend money. Lines show P&amp;L % over time. Paper trading only, not financial advice.</p></div>';
+ ov.innerHTML='<div class="vs-box"><button class="vs-x" aria-label="Close">×</button><canvas></canvas><p class="vs-note"><span class="vs-lv"></span> Each book starts at 1 SOL of pretend money. Lines show P&amp;L % over time. Paper trading only, not financial advice.</p></div>';
  document.body.appendChild(ov);const cv=ov.querySelector('canvas'),close=()=>{cancelAnimationFrame(raf);ov&&ov.remove();ov=null};
  ov.addEventListener('click',e=>{if(e.target===ov||e.target.classList.contains('vs-x'))close()});
  (function fr(t){if(!ov)return;const r=cv.getBoundingClientRect(),dp=devicePixelRatio||1;if(cv.width!==Math.round(r.width*dp)){cv.width=Math.round(r.width*dp);cv.height=Math.round(r.height*dp)}
-  const X=cv.getContext('2d');X.setTransform(dp,0,0,dp,0,0);X.clearRect(0,0,r.width,r.height);board(X,0,0,r.width,r.height,t,true);raf=requestAnimationFrame(fr)})(0)}
+  const X=cv.getContext('2d');X.setTransform(dp,0,0,dp,0,0);X.clearRect(0,0,r.width,r.height);board(X,0,0,r.width,r.height,t,true);const lvE=ov&&ov.querySelector('.vs-lv');if(lvE&&window.DeskBooks){const B=DeskBooks.get(),L=Object.values(B).filter(b=>b&&b.live);lvE.innerHTML=L.length?DeskBooks.badge(L.some(b=>b.delayed)):''}raf=requestAnimationFrame(fr)})(0)}
 /* score line for Ledger's bubble card */
-window.DeskVS={series,cardHTML(){const S=series(),lead=S.qc===S.lc?'tied':(S.qc>S.lc?'Quanty leads':'Ledger leads');
+window.DeskVS={series,cardHTML(){if(window.DeskBooks){const B0=DeskBooks.get(),B={};NM.forEach(n=>{if(B0[n]&&B0[n].traded)B[n]=B0[n]});const r=NM.filter(n=>B[n]).sort((a,b)=>B[b].pct-B[a].pct);return '<br><b>RACE</b>: '+NM.map(n=>B[n]?`<span style="color:${COL[n]}">${LAB[n][0]} ${f(B[n].pct)}</span>`:`<span class="mt">${LAB[n][0]} no trades</span>`).join(' · ')+(r.length?`<br><span class="mt">${LAB[r[0]]} leads</span>`:'')}const S=series(),lead=S.qc===S.lc?'tied':(S.qc>S.lc?'Quanty leads':'Ledger leads');
  return `<br><b>QUANTY vs LEDGER</b>: <span style="color:${QC}">${f(S.qc)}</span> vs <span style="color:${LC}">${f(S.lc)}</span> · ${lead}<br><span class="mt">W/L ${S.qw}-${S.ql} vs ${S.lw}-${S.ll}</span>`}};
 })();
