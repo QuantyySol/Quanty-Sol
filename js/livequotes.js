@@ -1,4 +1,4 @@
-/* livequotes.js : client-side live prices for every open coin (Quanty main+premig, Ledger book).
+/* livequotes.js : client-side live prices for every open coin (every book).
    Polls the public DexScreener tokens endpoint from the browser (30 mints per call, ~5 s while the tab is visible,
    paused while hidden, backs off on errors/429). Picks the highest-liquidity pair quoted in SOL (else USD price / sol_usd).
    Coins DexScreener doesn't list yet fall back to the desk.json values and are flagged delayed:true.
@@ -55,7 +55,7 @@ function compute(d){
   function book(src,v){var oc=0;(src.open||[]).forEach(function(o){oc+=(+o.cost_sol||0)+(+o.unreal_sol||0);});
     /* cash: explicit cash_sol (non-quanty books), else bank_sol minus open value at the desk mark (consistent with the live overlay) */
     var cash=src.cash_sol!=null?+src.cash_sol:(src.bank_sol!=null?(+src.bank_sol)-oc:null); if(cash==null)return null;
-    var start=+src.start_sol||1,bank=cash+v;return {bank:bank,cash:cash,pnl_sol:bank-start,pnl_pct:(bank/start-1)*100,open:(src.open||[]).length};}
+    var start=+src.start_sol||+src.starting_bank_sol||+d.start_sol||+d.starting_bank_sol||10,bank=cash+v;return {bank:bank,cash:cash,pnl_sol:bank-start,pnl_pct:(bank/start-1)*100,open:(src.open||[]).length};}
   for(var k in B){var r=book(B[k],val[k]||0);if(r){r.delayed=stale[k];live.books[k]=r;}}
   if(!live.books.quanty)live.books.quanty={bank:+d.bank_sol||0,cash:0,pnl_sol:0,pnl_pct:0,open:0,delayed:true};
   if(sol)live.books.quanty.bank_usd=live.books.quanty.bank*sol;
@@ -85,8 +85,7 @@ function paint(L){
   var tk=document.querySelector(".ticker"), s=document.getElementById("lq-strip");
   if(tk&&!s){s=document.createElement("span");s.id="lq-strip";tk.appendChild(s);}
   if(s){var n=0,mcs=[];for(var m in L.positions){n++;var p=L.positions[m];if(p.book==="quanty")mcs.push((p.symbol||"?")+" "+(fmtMC(p.mc_usd)||"--")+" "+fmtP(p.pnl_pct));}
-    var dl=!L.ok||(q&&q.delayed); s.innerHTML=badge(dl)+" "+(mcs.length?mcs.slice(0,4).join(" · ")+(mcs.length>4?" +"+(mcs.length-4):""):"no open coins")+
-      (L.books.ledger?" · Ledger "+fmtP(L.books.ledger.pnl_pct):"")+(L.books.twitter?" · Twitter "+fmtP(L.books.twitter.pnl_pct):"");}
+    var dl=!L.ok||(q&&q.delayed); s.innerHTML=badge(dl)+" "+(mcs.length?mcs.slice(0,4).join(" · ")+(mcs.length>4?" +"+(mcs.length-4):""):"no open coins");}
 }
 var CORE=null; /* index.html core keeps Desk.live.state / .lagSec (live-feed status); preserve them */
 function publish(){var d=D();if(!d)return;var L=compute(d);
