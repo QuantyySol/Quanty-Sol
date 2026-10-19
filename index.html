@@ -1,106 +1,115 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Uncle Quanty, PhD — Paper Trading Desk</title><link rel="icon" href="assets/robot_head.png">
 <style>
-:root{--bg:#06080a;--panel:#0d1214;--line:#1b2629;--ink:#eef6f2;--mut:#8aa098;--g:#39ff88;--r:#ff5c6c;--b:#4da3ff;--p:#ff5cc8}
-*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.6 Inter,"Segoe UI",system-ui,sans-serif}
-header{position:sticky;top:0;z-index:5;background:rgba(6,8,10,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
-.bar{max-width:1180px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px}.brand img{width:38px;height:38px;border-radius:50%;border:1px solid var(--g)}
-.brand span{color:var(--g)}nav{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
-nav a{color:var(--mut);text-decoration:none;padding:8px 14px;border-radius:99px;font-size:16px;font-weight:600}nav a:hover{color:var(--ink)}nav a.on{background:var(--g);color:#000}
-.note{background:#0b1a12;color:var(--g);text-align:center;font-size:14px;padding:6px;font-weight:700;letter-spacing:.04em}
-main{max-width:1180px;margin:0 auto;padding:26px 20px 60px}section{display:none}section.on{display:block}
-h2{font-size:32px;margin:0 0 6px}p.sub{color:var(--mut);margin:0 0 22px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px}
-.k{color:var(--mut);font-size:14px;text-transform:uppercase;letter-spacing:.08em}.v{font-size:34px;font-weight:800;margin-top:4px}
-.up{color:var(--g)}.dn{color:var(--r)}canvas#oc{width:100%;aspect-ratio:16/9;display:block;border-radius:18px;border:1px solid var(--line);background:#0a0f12;image-rendering:pixelated}
-.live{display:inline-flex;align-items:center;gap:8px;font-size:15px;color:var(--mut)}.dot{width:10px;height:10px;border-radius:50%;background:var(--r)}.dot.on{background:var(--g);box-shadow:0 0 12px var(--g)}
-.row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:16px 4px;border-bottom:1px solid var(--line)}.row:last-child{border:0}
-.row .t{color:var(--mut);font-size:15px;min-width:150px}.row .m{flex:1}.row .x{font-weight:800;white-space:nowrap}
-.pill{display:inline-block;font-size:13px;padding:2px 10px;border-radius:99px;background:#16201e;color:var(--mut);margin-left:8px}
-svg.chart{width:100%;height:260px}ul.rules{padding-left:22px}ul.rules li{margin:10px 0}footer{color:var(--mut);font-size:14px;text-align:center;padding:30px}
+:root{--bg:#05070a;--panel:#0d1214;--line:#1b2629;--ink:#eef6f2;--mut:#8aa098;--g:#39ff88;--r:#ff5c6c;--b:#4da3ff;--p:#ff5cc8}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 Inter,"Segoe UI",system-ui,sans-serif}
+header{position:sticky;top:0;z-index:9;background:rgba(5,7,10,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:12px;padding:8px 18px;height:52px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:16px;white-space:nowrap}.brand img{width:30px;height:30px;border-radius:50%;border:1px solid var(--g)}.brand span{color:var(--g)}
+.paper{font-size:11px;font-weight:800;color:#000;background:var(--g);border-radius:99px;padding:2px 8px;white-space:nowrap}
+nav{display:flex;gap:2px;margin-left:auto;overflow-x:auto;scrollbar-width:none}nav::-webkit-scrollbar{display:none}
+nav a{color:var(--mut);text-decoration:none;padding:5px 11px;border-radius:99px;font-size:14px;font-weight:600;white-space:nowrap}nav a:hover{color:var(--ink)}nav a.on{background:#16261d;color:var(--g)}
+@media(max-width:760px){.bar{flex-wrap:wrap;height:auto;padding:6px 10px;gap:6px}.brand{font-size:14px}.brand img{width:24px;height:24px}.brand .long{display:none}nav{order:3;width:100%;margin:0}nav a{font-size:13px;padding:4px 9px}}
+section{display:none}section.on{display:block}main>section:not(#office){max-width:1100px;margin:0 auto;padding:24px 18px 50px}
+h2{font-size:28px;margin:0 0 4px}p.sub{color:var(--mut);margin:0 0 18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+.k{color:var(--mut);font-size:13px;text-transform:uppercase;letter-spacing:.08em}.v{font-size:30px;font-weight:800}.up{color:var(--g)}.dn{color:var(--r)}
+/* office */
+#office{padding:0}.stage{position:relative;width:100%;aspect-ratio:16/9;max-height:calc(100vh - 110px);margin:0 auto;background:#0a0f12;overflow:hidden}
+@media(max-width:760px){.stage{aspect-ratio:3/5;max-height:none}}
+canvas#oc{position:absolute;inset:0;width:100%;height:100%;display:block}
+.screen{position:absolute;left:36%;top:7%;width:60%;height:55%;background:#020a06;border-radius:10px;padding:1.1% 1.4%;display:grid;grid-template-columns:1.25fr 1fr;gap:1.2%;font-family:ui-monospace,Menlo,Consolas,monospace;color:#c8ffe0;overflow:hidden;box-shadow:inset 0 0 40px rgba(57,255,136,.08)}
+.screen:after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px)}
+@media(max-width:760px){.stage .screen{left:4%;top:3%;width:92%;height:46%;grid-template-columns:1fr;grid-template-rows:1fr 1fr}}
+.pane{display:flex;flex-direction:column;min-height:0}.ph{font-size:clamp(9px,1vw,14px);color:var(--g);font-weight:800;letter-spacing:.12em;border-bottom:1px solid #12301f;padding-bottom:4px;margin-bottom:4px;display:flex;justify-content:space-between}
+.feed{overflow:hidden;flex:1}.tr{display:grid;grid-template-columns:5.6em 4.8em 1fr 5.5em 5.6em;gap:.5em;font-size:clamp(9px,.95vw,14px);padding:3px 2px;border-bottom:1px solid #0c1f15;align-items:center}
+
+.tag{font-weight:800;border-radius:4px;padding:0 4px;text-align:center;font-size:.9em}.BUY{background:#123d27;color:var(--g)}.TP{background:#10324a;color:var(--b)}.STOP,.TRAIL{background:#3d1218;color:var(--r)}.TIME,.SELL{background:#2a2a14;color:#ffd75f}
+.sym{font-weight:800;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mt{color:#6f8f80}.r{text-align:right}
+.pos{border:1px solid #12301f;border-radius:8px;padding:5px 7px;margin-bottom:6px;font-size:clamp(9px,1vw,14px)}.pos .top{display:flex;justify-content:space-between;font-weight:800}.pos svg{width:100%;height:clamp(22px,4.2vw,64px);display:block}
+.ticker{position:absolute;left:0;right:0;bottom:0;display:flex;gap:20px;justify-content:center;flex-wrap:wrap;padding:8px;background:linear-gradient(transparent,rgba(5,7,10,.9));font-size:15px}
+.ticker b{font-size:18px}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--r);margin-right:6px}.dot.on{background:var(--g);box-shadow:0 0 10px var(--g)}
+.row{display:flex;justify-content:space-between;gap:12px;padding:13px 2px;border-bottom:1px solid var(--line)}.row:last-child{border:0}.row .t{color:var(--mut);font-size:14px;min-width:130px}.row .m{flex:1}.row .x{font-weight:800}
+svg.chart{width:100%;height:240px}ul.rules li{margin:9px 0}footer{color:var(--mut);font-size:13px;text-align:center;padding:16px}
 </style></head><body>
-<header><div class="bar"><div class="brand"><img src="assets/robot_head.png" alt="">Uncle Quanty, PhD — <span>Paper Trading Desk</span></div>
-<nav id="nav"><a href="#office">Office</a><a href="#positions">Open Positions</a><a href="#history">Trade History</a><a href="#stats">Performance</a><a href="#kol">KOL Watch</a><a href="#rules">Strategy</a><a href="#about">About</a></nav></div>
-<div class="note">PAPER TRADING ONLY · NOT FINANCIAL ADVICE · NO REAL MONEY</div></header>
+<header><div class="bar"><div class="brand"><img src="assets/robot_head.png" alt="">Uncle Quanty, PhD<span class="long">&nbsp;— <span>Paper Trading Desk</span></span></div><span class="paper">PAPER · NOT FINANCIAL ADVICE</span>
+<nav><a href="#office">Office</a><a href="#positions">Positions</a><a href="#history">History</a><a href="#stats">Stats</a><a href="#kol">KOL Watch</a><a href="#rules">Strategy</a><a href="#about">About</a></nav></div></header>
 <main>
-<section id="office"><div style="display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:10px;margin-bottom:14px"><div><h2>The Office</h2><p class="sub" style="margin:0" id="speech">Loading the desk…</p></div><div class="live"><span class="dot" id="dot"></span><span id="st">connecting…</span></div></div>
-<canvas id="oc" width="960" height="540"></canvas>
-<div class="grid" style="margin-top:14px"><div class="card"><div class="k">Paper bank</div><div class="v" id="bank">–</div><div class="k" id="usd"></div></div>
-<div class="card"><div class="k">Profit / loss</div><div class="v" id="pnl">–</div></div><div class="card"><div class="k">Holding now</div><div class="v" id="nopen">–</div></div>
-<div class="card"><div class="k">Win rate</div><div class="v" id="wr">–</div></div></div></section>
+<section id="office"><div class="stage" id="stage"><canvas id="oc"></canvas>
+<div class="screen"><div class="pane"><div class="ph"><span>LIVE TRADES</span><span id="clk"></span></div><div class="feed" id="feed"></div></div>
+<div class="pane"><div class="ph"><span>OPEN POSITIONS</span><span id="nop"></span></div><div id="poss" class="feed"></div></div></div>
+<div class="ticker"><span><span class="dot" id="dot"></span><span id="st">connecting…</span></span><span>Bank <b id="bank">–</b></span><span>P&amp;L <b id="pnl">–</b></span><span>Win rate <b id="wr">–</b></span></div></div></section>
 <section id="positions"><h2>Open Positions</h2><p class="sub">Coins the desk is holding right now (paper).</p><div class="card" id="op"></div></section>
-<section id="history"><h2>Trade History</h2><p class="sub">Recent sells and what triggered them.</p><div class="card" id="cl"></div><h2 style="margin-top:30px;font-size:24px">Desk activity</h2><div class="card" id="fd"></div></section>
-<section id="stats"><h2>Performance</h2><p class="sub">Starting bank: 1 SOL of pretend money.</p><div class="grid" id="sg"></div><div class="card" style="margin-top:14px"><div class="k">Bank over time (SOL)</div><svg class="chart" id="ch" viewBox="0 0 100 40" preserveAspectRatio="none"></svg></div></section>
-<section id="kol"><h2>KOL Watch</h2><p class="sub">Hunting for public traders worth following.</p><div class="card"><p><b>Bar to qualify:</b> 95%+ win rate and more than 2 trades a day, sustained.</p><p><b>Status:</b> no trader has cleared the bar yet, so the desk trades on its own signals and does not copy anyone.</p><p class="k">Checked regularly · nothing here is a recommendation</p></div></section>
+<section id="history"><h2>Trade History</h2><p class="sub">Every paper buy and sell, newest first.</p><div class="card" id="cl"></div></section>
+<section id="stats"><h2>Performance</h2><p class="sub">Starting bank: 1 SOL of pretend money.</p><div class="grid" id="sg"></div><div class="card" style="margin-top:12px"><div class="k">Bank over time (SOL)</div><svg class="chart" id="ch" viewBox="0 0 100 40" preserveAspectRatio="none"></svg></div></section>
+<section id="kol"><h2>KOL Watch</h2><p class="sub">Hunting for public traders worth following.</p><div class="card"><p><b>Bar to qualify:</b> <span id="kbar">70%+ win rate with an average hold time of at least 2 hours</span></p><p><b>Status:</b> <span id="kst">no trader has cleared the bar yet, so the desk trades on its own signals and does not copy anyone.</span></p><p class="k">Checked regularly · nothing here is a recommendation</p></div></section>
 <section id="rules"><h2>Strategy</h2><p class="sub">The rules the desk follows on every trade.</p><div class="card"><ul class="rules" id="rl"></ul></div></section>
-<section id="about"><h2>About</h2><div class="card"><p>Uncle Quanty is an automated bot running a <b>paper</b> memecoin desk. It scans trending coins, runs safety checks to skip likely rugs, and simulates buys and sells with a fake 1 SOL bank.</p><p>No real money is traded. Nothing on this page is financial advice or a suggestion to buy or sell anything. The data updates automatically every few minutes.</p></div></section>
+<section id="about"><h2>About</h2><div class="card"><p>Uncle Quanty is an automated bot running a <b>paper</b> memecoin desk. It scans trending coins, runs safety checks to skip likely rugs, and simulates buys and sells with a fake 1 SOL bank.</p><p>No real money is traded. Nothing here is financial advice or a suggestion to buy or sell anything. Data refreshes automatically, usually within a few minutes.</p></div></section>
 </main><footer>Paper trading only · not financial advice</footer>
 <script>
 const $=i=>document.getElementById(i),E=s=>String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-const T=s=>s?new Date(s).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';const S=x=>(x>=0?'+':'')+(+x).toFixed(4);
-// routing
-function route(){const h=(location.hash||'#office').slice(1);document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===h));document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+h));if(!document.querySelector('section.on'))$('office').classList.add('on')}
-addEventListener('hashchange',route);route();
-let D=null,lastEv=null;
-async function load(){try{const d=await (await fetch('desk.json?t='+Date.now(),{cache:'no-store'})).json();D=d;render(d);events(d)}catch(e){$('st').textContent='reconnecting…'}}
-function render(d){$('dot').className='dot'+(d.live?' on':'');$('st').textContent=(d.live?'Live':'Paused')+' · updated '+T(d.last_update);$('speech').textContent=d.speech||'';
-$('bank').textContent=(+d.bank_sol).toFixed(4)+' SOL';$('usd').textContent=d.bank_usd?'≈ $'+d.bank_usd.toFixed(2):'';const p=+d.pnl_sol||0;$('pnl').textContent=S(p)+' SOL';$('pnl').className='v '+(p>=0?'up':'dn');
-const s=d.stats||{};$('wr').textContent=Math.round((s.win_rate||0)*100)+'%';$('nopen').textContent=(d.open||[]).length;
-$('op').innerHTML=(d.open||[]).map(o=>`<div class="row"><span class="t">${T(o.opened_at)}</span><span class="m"><b>${E(o.symbol)}</b><span class="pill">in ${(+o.cost_sol||0).toFixed(4)} SOL</span></span><span class="x ${o.pnl_pct>=0?'up':'dn'}">${o.pnl_pct!=null?(o.pnl_pct>=0?'+':'')+o.pnl_pct.toFixed(1)+'%':''}</span></div>`).join('')||'<div class="row"><span class="m">Not holding anything right now.</span></div>';
-$('cl').innerHTML=(d.closed||[]).map(c=>`<div class="row"><span class="t">${T(c.closed_at)}</span><span class="m">Sold <b>${E(c.symbol)}</b><span class="pill">${E(c.rule)}</span></span><span class="x ${c.pnl_sol>=0?'up':'dn'}">${S(c.pnl_sol)} SOL</span></div>`).join('')||'<div class="row">No closed trades yet.</div>';
-$('fd').innerHTML=(d.feed||[]).slice(0,15).map(f=>`<div class="row"><span class="t">${T(f.ts)}</span><span class="m">${E(f.text)}</span></div>`).join('');
-const st=[['Trades',s.trades],['Wins',s.wins],['Losses',s.losses],['Win rate',Math.round((s.win_rate||0)*100)+'%'],['Realized',S(s.realized_sol||0)+' SOL'],['Fees paid',(+s.fees_paid_sol||0).toFixed(4)+' SOL']];
-$('sg').innerHTML=st.map(([k,v])=>`<div class="card"><div class="k">${k}</div><div class="v">${v??0}</div></div>`).join('');
+const T=s=>s?new Date(s).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'',HM=s=>s?new Date(s).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:false}):'';
+const S=x=>(x>=0?'+':'')+(+x).toFixed(4),P=x=>x==null?'':(x>=0?'+':'')+(+x).toFixed(1)+'%',PR=x=>x==null?'':(+x).toPrecision(3);
+function route(){const h=(location.hash||'#office').slice(1);let f=0;document.querySelectorAll('main>section').forEach(s=>{const on=s.id===h;s.classList.toggle('on',on);f|=on});if(!f)$('office').classList.add('on');document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+(f?h:'office')));fit()}
+addEventListener('hashchange',route);
+let D=null,seen=null;
+async function load(){try{const d=await (await fetch('desk.json?t='+Date.now(),{cache:'no-store'})).json();D=d;render(d)}catch(e){$('st').textContent='reconnecting…'}}
+function spark(pts,up){const v=(pts||[]).map(p=>p[1]).filter(x=>x!=null);if(v.length<2)return'<svg></svg>';const mn=Math.min(...v),mx=Math.max(...v),r=(mx-mn)||1;
+return `<svg viewBox="0 0 100 30" preserveAspectRatio="none"><polyline fill="none" stroke="${up?'#39ff88':'#ff5c6c'}" stroke-width="1.4" points="${v.map((y,i)=>(i/(v.length-1)*100).toFixed(1)+','+(28-(y-mn)/r*26).toFixed(1)).join(' ')}"/></svg>`}
+function render(d){const tr=d.trades||[],s=d.stats||{};
+$('dot').className='dot'+(d.live?' on':'');$('st').textContent=(d.live?'Live':'Paused')+' · '+HM(d.last_update);$('bank').textContent=(+d.bank_sol).toFixed(4)+' SOL';
+const p=+d.pnl_sol||0;$('pnl').textContent=S(p);$('pnl').className=p>=0?'up':'dn';$('wr').textContent=Math.round((s.win_rate||0)*100)+'%';
+const ids=tr.map(t=>t.ts+t.side+t.symbol),old=new Set(seen||ids);
+$('feed').innerHTML=tr.slice(0,14).map((t,i)=>`<div class="tr${old.has(ids[i])?'':' new'}"><span class="mt">${HM(t.ts)}</span><span class="tag ${t.side}">${t.side}</span><span class="sym">${E(t.symbol)}</span><span class="r">${t.size_sol!=null?(+t.size_sol).toFixed(3)+' SOL':''}<br><span class="mt">@${PR(t.price_sol)}</span></span><span class="r ${t.pnl_pct>=0?'up':'dn'}">${t.pnl_pct==null?'<span class="mt">open</span>':P(t.pnl_pct)}</span></div>`).join('')||'<div class="mt">waiting for the first trade…</div>';
+document.querySelectorAll('.tr.new').forEach(el=>el.animate([{opacity:0,transform:'translateX(-14px)',background:'rgba(57,255,136,.3)'},{opacity:1,transform:'none',background:'transparent'}],{duration:900,easing:'ease-out'}));
+const fresh=seen&&ids.find(i=>!old.has(i));if(fresh){const t=tr[ids.indexOf(fresh)];Bot.react(t)}seen=ids;
+const op=d.open||[];$('nop').textContent=op.length;
+$('poss').innerHTML=op.map(o=>`<div class="pos"><div class="top"><span>${E(o.symbol)}</span><span class="${o.pnl_pct>=0?'up':'dn'}">${P(o.pnl_pct)}</span></div><div class="mt">in ${(+o.cost_sol||0).toFixed(3)} SOL · now ${PR(o.price_sol)}</div>${spark((d.marks||{})[o.symbol],o.pnl_pct>=0)}</div>`).join('')||'<div class="mt">flat · scanning the boards…</div>';
+$('op').innerHTML=op.map(o=>`<div class="row"><span class="t">${T(o.opened_at)}</span><span class="m"><b>${E(o.symbol)}</b> · in ${(+o.cost_sol||0).toFixed(4)} SOL</span><span class="x ${o.pnl_pct>=0?'up':'dn'}">${P(o.pnl_pct)}</span></div>`).join('')||'<div class="row">Not holding anything right now.</div>';
+$('cl').innerHTML=tr.map(t=>`<div class="row"><span class="t">${T(t.ts)}</span><span class="m"><span class="tag ${t.side}">${t.side}</span> <b>${E(t.symbol)}</b> · ${(+t.size_sol||0).toFixed(4)} SOL</span><span class="x ${t.pnl_pct>=0?'up':'dn'}">${t.pnl_pct==null?'':P(t.pnl_pct)}</span></div>`).join('')||'<div class="row">No trades yet.</div>';
+$('sg').innerHTML=[['Trades',s.trades],['Wins',s.wins],['Losses',s.losses],['Win rate',Math.round((s.win_rate||0)*100)+'%'],['Realized',S(s.realized_sol||0)+' SOL'],['Fees paid',(+s.fees_paid_sol||0).toFixed(4)+' SOL']].map(([k,v])=>`<div class="card"><div class="k">${k}</div><div class="v">${v??0}</div></div>`).join('');
 const v=(d.history||[]).map(x=>x[1]);if(v.length>1){const mn=Math.min(...v),mx=Math.max(...v),r=(mx-mn)||1;$('ch').innerHTML=`<polyline fill="none" stroke="#39ff88" stroke-width=".5" points="${v.map((y,i)=>(i/(v.length-1)*100).toFixed(2)+','+(38-(y-mn)/r*36).toFixed(2)).join(' ')}"/>`}
-const R=d.rules||{},pc=x=>Math.round((x||0)*100)+'%';$('rl').innerHTML=[
-'Only coins from the Trending and Movers boards, and only after passing rug and holder-spread safety checks.',
-`Take profit: sell ${pc(R.take_profit_sell_frac)} of the position at +${pc(R.take_profit_frac)}.`,`Stop loss: sell everything at −${pc(R.stop_loss_frac)}.`,
-`Trailing stop: sell if price falls ${pc(R.trail_frac)} from its peak.`,`Time stop: if still not in profit after ${R.time_stop_hours||0} hours, sell.`,'Skip coins that already pumped too hard in the last hour.'].map(x=>`<li>${x}</li>`).join('')}
-function events(d){const ev=(d.feed||[]).find(f=>['buy','win','loss'].includes(f.icon));if(!ev)return;const id=ev.ts+ev.text;if(lastEv===null){lastEv=id;return}if(id!==lastEv){lastEv=id;Bot.react(ev)}}
-load();setInterval(load,60000);
-// ---------- office ----------
-const C=$("oc"),X=C.getContext('2d'),W=960,H=540,head=new Image();head.src='assets/robot_head.png';
-const spots={desk:{x:420,y:370},cooler:{x:800,y:380},window:{x:560,y:330},board:{x:110,y:340},plant:{x:900,y:400}};
-const Bot={x:420,y:370,tx:420,ty:370,state:'sit',timer:600,face:1,bubble:null,bt:0,mood:0,jump:0,
- go(s){const p=spots[s];this.tx=p.x;this.ty=p.y;this.state='walk';this.dest=s},
- say(t,ms=5000,c='#39ff88'){this.bubble={t,c};this.bt=ms/16},
- react(ev){this.go('desk');this.mood=ev.icon==='loss'?-1:1;this.jump=ev.icon!=='loss'?40:0;const m=ev.icon==='buy'?'Bought! '+ev.text.replace(/^Bought\s*/i,''):ev.text;this.say(m.slice(0,70),8000,ev.icon==='loss'?'#ff5c6c':'#39ff88')}};
-const idle=['Hmm, charts…','Checking rug filters','Patience is a position','Scanning the boards','Coffee? I run on SOL'];
-function step(){const b=Bot;if(b.state==='walk'){const dx=b.tx-b.x,dy=b.ty-b.y,d=Math.hypot(dx,dy);if(d<2){b.x=b.tx;b.y=b.ty;b.state=b.dest==='desk'?'sit':'look';b.timer=b.dest==='desk'?900+Math.random()*900:220+Math.random()*200;if(b.dest!=='desk'&&Math.random()<.6)b.say(idle[Math.random()*idle.length|0],3000,'#cfe')}else{b.x+=dx/d*1.6;b.y+=dy/d*1.6;b.face=dx>=0?1:-1}}
- else if(--b.timer<=0){if(b.state==='sit'){const k=['cooler','window','board','plant'];b.go(k[Math.random()*4|0])}else b.go('desk')}
- if(b.bt>0&&--b.bt<=0)b.bubble=null;if(b.jump>0)b.jump--}
+const R=d.rules||{},pc=x=>Math.round((x||0)*100)+'%';$('rl').innerHTML=['Only coins from the Trending and Movers boards, and only after passing rug and holder-spread safety checks.',`Take profit: sell ${pc(R.take_profit_sell_frac)} of the position at +${pc(R.take_profit_frac)}.`,`Stop loss: sell everything at −${pc(R.stop_loss_frac)}.`,`Trailing stop: sell if price falls ${pc(R.trail_frac)} from its peak.`,`Time stop: if still not in profit after ${R.time_stop_hours||0} hours, sell.`,'Skip coins that already pumped too hard in the last hour.'].map(x=>`<li>${x}</li>`).join('');
+const K=d.kol||d.kol_watch;if(K){if(K.bar)$('kbar').textContent=K.bar;if(K.status)$('kst').textContent=K.status}}
+load();setInterval(load,30000);setInterval(()=>$('clk').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'}),1000);
+// ---------- office canvas ----------
+const C=$('oc'),X=C.getContext('2d'),head=new Image();head.src='assets/robot_head.png';let W=1600,H=900,mob=false;
+function fit(){const r=$('stage').getBoundingClientRect();if(!r.width)return;mob=r.width<760;W=mob?800:1600;H=mob?1333:900;C.width=W;C.height=H;
+ spots=mob?{desk:{x:400,y:1010},cooler:{x:690,y:1050},window:{x:180,y:1050},board:{x:560,y:1050},plant:{x:110,y:1080}}:{desk:{x:520,y:760},cooler:{x:330,y:780},window:{x:150,y:770},board:{x:300,y:760},plant:{x:70,y:800}};
+ if(Bot.state==='sit'){Bot.x=spots.desk.x;Bot.y=spots.desk.y}}
+let spots={};addEventListener('resize',fit);
+const Bot={x:520,y:760,tx:520,ty:760,state:'sit',timer:500,bubble:null,bt:0,mood:0,jump:0,rush:false,
+ go(s,rush){const p=spots[s];this.tx=p.x;this.ty=p.y;this.state='walk';this.dest=s;this.rush=!!rush},
+ say(t,ms,c){this.bubble={t,c:c||'#39ff88'};this.bt=ms/16},
+ react(t){const loss=t.side==='STOP'||t.side==='TRAIL'||(t.pnl_pct!=null&&t.pnl_pct<0);this.go('desk',true);this.mood=loss?-1:1;this.jump=loss?0:45;
+  const m=t.side==='BUY'?`BUY ${t.symbol}! ${(+t.size_sol).toFixed(3)} SOL`:`${t.side} ${t.symbol} ${P(t.pnl_pct)}`;this.say(m,9000,loss?'#ff5c6c':'#39ff88')}};
+const idle=['Hmm, charts…','Checking rug filters','Patience is a position','Scanning the boards','Hydrate. Then trade.'];
+function step(){const b=Bot;if(b.state==='walk'){const dx=b.tx-b.x,dy=b.ty-b.y,d=Math.hypot(dx,dy),sp=b.rush?6:2;if(d<sp){b.x=b.tx;b.y=b.ty;b.rush=false;b.state=b.dest==='desk'?'sit':'look';b.timer=b.dest==='desk'?900+Math.random()*900:220+Math.random()*220;if(b.dest!=='desk'&&Math.random()<.6)b.say(idle[Math.random()*idle.length|0],3000,'#cfe')}else{b.x+=dx/d*sp;b.y+=dy/d*sp}}
+ else if(--b.timer<=0){if(b.state==='sit')b.go(['cooler','window','board','plant'][Math.random()*4|0]);else b.go('desk')}if(b.bt>0&&--b.bt<=0)b.bubble=null;if(b.jump>0)b.jump--}
 function rr(x,y,w,h,r,f){X.fillStyle=f;X.beginPath();X.roundRect(x,y,w,h,r);X.fill()}
-function scene(t){const g=X.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0e1518');g.addColorStop(1,'#0a0e10');X.fillStyle=g;X.fillRect(0,0,W,H);
- X.fillStyle='#111b1e';X.fillRect(0,360,W,180);for(let i=0;i<W;i+=48){X.fillStyle=i/48%2?'#121d20':'#0f181b';X.fillRect(i,360,48,180)}
- // window w/ aurora
- rr(470,60,190,170,10,'#1f2b2e');const a=X.createLinearGradient(480,70,480,220);a.addColorStop(0,'#05070c');a.addColorStop(1,'#0b1f18');X.fillStyle=a;X.fillRect(480,70,170,150);
- for(let i=0;i<3;i++){X.strokeStyle=`rgba(57,255,136,${.25+.15*Math.sin(t/900+i)})`;X.lineWidth=10;X.beginPath();for(let x=480;x<=650;x+=10)X.lineTo(x,120+i*22+Math.sin(x/25+t/1200+i)*12);X.stroke()}
- X.fillStyle='#1f2b2e';X.fillRect(563,70,4,150);X.fillRect(480,143,170,4);
- // whiteboard
- rr(40,90,190,130,8,'#dfe7e4');X.strokeStyle='#4da3ff';X.lineWidth=3;X.beginPath();X.moveTo(60,190);X.lineTo(100,150);X.lineTo(130,170);X.lineTo(200,110);X.stroke();X.fillStyle='#ff5cc8';X.font='bold 16px Inter,sans-serif';X.fillText('TP +20%  SL −12%',58,125);rr(40,220,190,8,3,'#9aa');
- // cooler
- rr(780,250,50,110,6,'#cfe3ea');rr(786,200,38,56,10,'rgba(77,163,255,.55)');X.fillStyle='#4da3ff';X.fillRect(800,300,10,8);
- // plant
- rr(880,330,46,40,6,'#5a3b2a');for(let i=0;i<5;i++){X.fillStyle=i%2?'#2fbf6a':'#39ff88';X.beginPath();X.ellipse(903+Math.sin(t/700+i)*3+(i-2)*9,315-i%3*12,9,22,(i-2)*.35,0,7);X.fill()}
- // desk + monitor
- rr(170,300,260,16,4,'#2c3a3e');X.fillStyle='#223034';X.fillRect(185,316,10,60);X.fillRect(405,316,10,60);
- rr(215,175,170,115,8,'#1a2427');rr(222,182,156,100,5,'#03100a');X.fillStyle='#2c3a3e';X.fillRect(292,290,16,12);monitor(222,182,156,100,t)}
-function monitor(x,y,w,h,t){if(!D)return;let v=(D.history||[]).map(p=>p[1]);const o=(D.open||[])[0];
- if(v.length>1){v=v.slice(-80);const mn=Math.min(...v),mx=Math.max(...v),r=(mx-mn)||1,n=Math.min(v.length,Math.floor(v.length*((t/40)%400/100))+2);
- X.strokeStyle=v[v.length-1]>=v[0]?'#39ff88':'#ff5c6c';X.lineWidth=2;X.beginPath();for(let i=0;i<Math.min(n,v.length);i++)X.lineTo(x+6+i/(v.length-1)*(w-12),y+h-26-(v[i]-mn)/r*(h-44));X.stroke()}
- X.fillStyle='#39ff88';X.font='bold 12px monospace';X.fillText('BANK '+(+D.bank_sol).toFixed(3),x+6,y+14);
- if(o){X.fillStyle=o.pnl_pct>=0?'#39ff88':'#ff5c6c';X.fillText(o.symbol+' '+(o.pnl_pct>=0?'+':'')+(+o.pnl_pct||0).toFixed(1)+'%',x+6,y+h-8)}else{X.fillStyle='#8aa098';X.fillText('scanning…',x+6,y+h-8)}}
-function robot(t){const b=Bot,walk=b.state==='walk',sit=b.state==='sit';let y=b.y-(b.jump?Math.abs(Math.sin(b.jump/6))*22:0);const bob=walk?Math.sin(t/90)*3:Math.sin(t/600)*1.5;
- X.fillStyle='rgba(0,0,0,.35)';X.beginPath();X.ellipse(b.x,b.y+6,30,7,0,0,7);X.fill();
- if(sit){rr(b.x-28,y-40,56,10,4,'#3a4a4e');X.fillStyle='#2a3639';X.fillRect(b.x-3,y-30,6,30)}
- const lg=walk?Math.sin(t/90)*10:0;X.fillStyle='#cfd8dc';X.fillRect(b.x-12+lg*.3,y-30-bob,7,sit?18:30);X.fillRect(b.x+5-lg*.3,y-30-bob,7,sit?18:30);
- const by=y-(sit?82:92)-bob;rr(b.x-22,by,44,52,12,'#e8eef0');rr(b.x-14,by+12,28,18,5,'#0a1a12');X.fillStyle=b.mood<0?'#ff5c6c':'#39ff88';X.fillRect(b.x-10,by+18,20*((Math.sin(t/300)+1)/2*.6+.4),5);
- const arm=sit?Math.sin(t/120)*4:(walk?-lg:0);X.fillStyle='#cfd8dc';X.fillRect(b.x-30,by+8+arm,8,30);X.fillRect(b.x+22,by+8-arm,8,30);
- const hs=70,hy=by-hs+6;X.save();X.translate(b.x,hy+hs/2);X.rotate(walk?Math.sin(t/180)*.05:Math.sin(t/900)*.04);
- X.shadowColor='#39ff88';X.shadowBlur=14;if(head.complete&&head.naturalWidth)X.drawImage(head,-hs/2,-hs/2,hs,hs);else{X.fillStyle='#222';X.beginPath();X.arc(0,0,hs/2,0,7);X.fill()}X.restore();
- if(b.bubble){X.font='bold 16px Inter,sans-serif';const tw=Math.min(X.measureText(b.bubble.t).width+24,420),bx=Math.max(10,Math.min(W-tw-10,b.x-tw/2)),byy=hy-50;
- rr(bx,byy,tw,34,12,'#0b1a12');X.strokeStyle=b.bubble.c;X.lineWidth=2;X.beginPath();X.roundRect(bx,byy,tw,34,12);X.stroke();X.fillStyle=b.bubble.c;X.fillText(b.bubble.t,bx+12,byy+22,tw-24)}}
-function loop(t){step();scene(t);robot(t);requestAnimationFrame(loop)}requestAnimationFrame(loop);setTimeout(()=>Bot.say('Welcome to the desk!',4000),800);
+function scene(t){const g=X.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0e1518');g.addColorStop(1,'#090d0f');X.fillStyle=g;X.fillRect(0,0,W,H);const fy=H*.78;
+ for(let i=0;i<W;i+=64){X.fillStyle=i/64%2?'#121d20':'#0f181b';X.fillRect(i,fy,64,H-fy)}
+ const wx=mob?60:50,wy=mob?830:120,ww=mob?240:250,wh=mob?150:230;rr(wx-10,wy-10,ww+20,wh+20,10,'#1f2b2e');X.fillStyle='#04070b';X.fillRect(wx,wy,ww,wh);
+ for(let i=0;i<3;i++){X.strokeStyle=`rgba(57,255,136,${.22+.15*Math.sin(t/900+i)})`;X.lineWidth=12;X.beginPath();for(let x=wx;x<=wx+ww;x+=10)X.lineTo(x,wy+wh*.35+i*22+Math.sin(x/30+t/1200+i)*14);X.stroke()}
+ X.fillStyle='#1f2b2e';X.fillRect(wx+ww/2-2,wy,4,wh);
+ const bx=mob?440:60,by=mob?840:420;rr(bx,by,mob?300:220,mob?140:150,8,'#dfe7e4');X.strokeStyle='#4da3ff';X.lineWidth=4;X.beginPath();X.moveTo(bx+20,by+120);X.lineTo(bx+70,by+70);X.lineTo(bx+110,by+95);X.lineTo(bx+190,by+35);X.stroke();X.fillStyle='#ff5cc8';X.font='bold 20px Inter,sans-serif';X.fillText('TP +20% · SL −12%',bx+16,by+32);
+ const cx=mob?660:300,cy=fy-140;rr(cx,cy,56,140,6,'#cfe3ea');rr(cx+7,cy-62,42,66,12,'rgba(77,163,255,.55)');
+ const px=mob?40:30,py=fy-30;rr(px,py,54,46,6,'#5a3b2a');for(let i=0;i<5;i++){X.fillStyle=i%2?'#2fbf6a':'#39ff88';X.beginPath();X.ellipse(px+27+Math.sin(t/700+i)*3+(i-2)*10,py-18-i%3*14,10,26,(i-2)*.35,0,7);X.fill()}
+ // big monitor frame (HTML screen sits inside it)
+ const s=mob?{x:.04,y:.03,w:.92,h:.46}:{x:.36,y:.07,w:.6,h:.55};const mx=s.x*W,my=s.y*H,mw=s.w*W,mh=s.h*H;
+ rr(mx-14,my-14,mw+28,mh+28,16,'#1a2427');X.shadowColor='#39ff88';X.shadowBlur=30;rr(mx-2,my-2,mw+4,mh+4,10,'#04120a');X.shadowBlur=0;
+ rr(mx+mw/2-30,my+mh+14,60,H*.06,4,'#223034');rr(mx+mw/2-110,my+mh+14+H*.06,220,12,6,'#223034');
+ const dy=my+mh+14+H*.06+12;rr(mob?40:440,dy,mob?W-80:W-480,22,6,'#2c3a3e');X.fillStyle='#1c2629';X.fillRect(mob?70:470,dy+22,16,fy-dy-10);X.fillRect(W-(mob?86:70),dy+22,16,fy-dy-10)}
+function robot(t){const b=Bot,walk=b.state==='walk',sit=b.state==='sit',k=mob?1:1.25;const y=b.y-(b.jump?Math.abs(Math.sin(b.jump/6))*30:0),bob=walk?Math.sin(t/(b.rush?50:90))*3:Math.sin(t/600)*1.5;
+ X.save();X.translate(b.x,y);X.scale(k,k);X.fillStyle='rgba(0,0,0,.35)';X.beginPath();X.ellipse(0,(b.y-y)/k+6,32,8,0,0,7);X.fill();
+ if(sit){rr(-30,-40,60,12,4,'#3a4a4e');X.fillStyle='#2a3639';X.fillRect(-3,-28,6,28)}
+ const lg=walk?Math.sin(t/(b.rush?50:90))*11:0;X.fillStyle='#cfd8dc';X.fillRect(-13+lg*.3,-30-bob,8,sit?18:30);X.fillRect(5-lg*.3,-30-bob,8,sit?18:30);
+ const by=-(sit?84:94)-bob;rr(-24,by,48,56,13,'#e8eef0');rr(-15,by+13,30,19,5,'#0a1a12');X.fillStyle=b.mood<0?'#ff5c6c':'#39ff88';X.fillRect(-11,by+19,22*((Math.sin(t/300)+1)/2*.6+.4),5);
+ const arm=sit?Math.sin(t/120)*4:(walk?-lg:0);X.fillStyle='#cfd8dc';X.fillRect(-32,by+8+arm,8,32);X.fillRect(24,by+8-arm,8,32);
+ const hs=76,hy=by-hs+8;X.save();X.translate(0,hy+hs/2);X.rotate(walk?Math.sin(t/180)*.06:Math.sin(t/900)*.04);X.shadowColor='#39ff88';X.shadowBlur=16;
+ if(head.complete&&head.naturalWidth)X.drawImage(head,-hs/2,-hs/2,hs,hs);else{X.fillStyle='#222';X.beginPath();X.arc(0,0,hs/2,0,7);X.fill()}X.restore();X.restore();
+ if(b.bubble){X.font='bold 22px Inter,sans-serif';const tw=Math.min(X.measureText(b.bubble.t).width+28,W*.6),bx=Math.max(10,Math.min((mob?W:W*.36-20)-tw,b.x-tw/2)),byy=y+(hy-58)*k;
+ rr(bx,byy,tw,40,14,'#0b1a12');X.strokeStyle=b.bubble.c;X.lineWidth=2;X.beginPath();X.roundRect(bx,byy,tw,40,14);X.stroke();X.fillStyle=b.bubble.c;X.fillText(b.bubble.t,bx+14,byy+27,tw-28)}}
+function loop(t){step();scene(t);robot(t);requestAnimationFrame(loop)}
+route();load();requestAnimationFrame(loop);setTimeout(()=>Bot.say('Welcome to the desk!',4000),800);
 </script></body></html>
