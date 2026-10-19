@@ -46,7 +46,8 @@ function compute(d){
     val[x.book]+=value||0; if(!fresh)stale[x.book]=true;
   });
   var lb=d.ledger_book||{}, qOpenCost=0; (d.open||[]).forEach(function(o){qOpenCost+=(+o.cost_sol||0)+(+o.unreal_sol||0);});
-  var qCash=d.cash_sol!=null?+d.cash_sol:(+d.bank_sol||0)-qOpenCost;
+  /* derive cash from bank_sol (the live feed overlays bank_sol/open but not cash_sol, so cash_sol can be stale) */
+  var qCash=d.bank_sol!=null?(+d.bank_sol)-qOpenCost:(+d.cash_sol||0);
   function book(cash,v,start,n){var bank=cash+v;return {bank:bank,cash:cash,pnl_sol:bank-start,pnl_pct:(bank/start-1)*100,open:n};}
   live.books.quanty=book(qCash,val.quanty,+d.start_sol||1,(d.open||[]).length); live.books.quanty.delayed=stale.quanty;
   if(lb.cash_sol!=null||lb.bank_sol!=null){live.books.ledger=book(lb.cash_sol!=null?+lb.cash_sol:+lb.bank_sol,lb.cash_sol!=null?val.ledger:0,+lb.start_sol||1,(lb.open||[]).length);live.books.ledger.delayed=stale.ledger;}
