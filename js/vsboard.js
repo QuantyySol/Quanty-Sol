@@ -6,7 +6,6 @@ if(!window.Desk||!Desk.office){console.warn('vsboard: Desk API missing');return}
 const O=Desk.office,QC='#39ff88',LC='#ffbf3f';
 const head=new Image();head.src='assets/robot_head.png';
 const rect=()=>O.mobile?{x:70,y:430,w:660,h:300}:{x:470,y:92,w:640,h:330},old=()=>O.mobile?{x:440,y:840,w:300,h:140}:{x:60,y:420,w:220,h:150};
-const pct=(b,s)=>((+b||0)/((+s)||1)-1)*100;
 const NM=['quanty','ledger','twitter'],COL={quanty:QC,ledger:LC,twitter:'#5cc8ff'},LAB={quanty:'QUANTY',ledger:'LEDGER',twitter:'TWITTER'};
 function series(){const B=window.DeskBooks;const o={rows:[]};
  NM.forEach(n=>{const b=B&&B.book(n);if(!b||!b.traded)return;o.rows.push({n,c:COL[n],pts:B.series(n),cur:b.pct,w:b.wins,l:b.losses,live:b.live,dl:b.delayed})});
@@ -39,7 +38,8 @@ function board(X,x,y,w,h,t,big){const S=series(),u=big?Math.min(w/300,h/170):w/2
 /* office actor drawn behind everyone (y=-1), covering the old whiteboard */
 let pointing=0;
 O.addActor({id:'vsboard-cover',y:-.95,draw(X){const o=old(),wg=X.createLinearGradient(0,0,0,O.height);wg.addColorStop(0,'#0e1518');wg.addColorStop(1,'#090d0f');X.fillStyle=wg;X.fillRect(o.x-4,o.y-4,o.w+8,o.h+8)}});
-O.addActor({id:'vsboard',y:-.5,draw(X,t){const r=rect();board(X,r.x,r.y,r.w,r.h,t,false);
+let vscEl=null;
+O.addActor({id:'vsboard',y:-.5,draw(X,t){const r=rect();if(!vscEl||!vscEl.isConnected)vscEl=document.querySelector('.vsc:not(.vsc-x)');const covered=!!vscEl;if(!covered)board(X,r.x,r.y,r.w,r.h,t,false);
  const L=Desk.actors.find(a=>a.id==='ledger');if(pointing>0&&L){pointing--;const k=O.mobile?1:1.25,hx=L.x+(r.x+r.w/2<L.x?-40:40)*k,hy=L.y-80*k;X.strokeStyle=LC;X.lineWidth=4;X.lineCap='round';X.setLineDash([2,7]);X.beginPath();X.moveTo(hx,hy);X.lineTo(r.x+r.w/2,r.y+r.h);X.stroke();X.setLineDash([]);X.fillStyle='#ff5c6c';X.font='900 34px Inter,sans-serif';X.fillText('!',hx-6,hy-20+Math.sin(t/90)*4)}}});
 /* agents wander up and react */
 const act=id=>Desk.actors.find(a=>a.id===id);
@@ -54,12 +54,11 @@ const C=O.canvas;let dn=null;
 C.addEventListener('pointerdown',e=>{dn={x:e.clientX,y:e.clientY,t:performance.now()}});
 C.addEventListener('pointerup',e=>{if(!dn)return;const m=Math.hypot(e.clientX-dn.x,e.clientY-dn.y)<8&&performance.now()-dn.t<450;dn=null;if(!m)return;const p=O.toCanvas(e.clientX,e.clientY),r=rect();if(p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h)open()});
 let ov=null,raf=0;
-function open(){if(ov)return;ov=document.createElement('div');ov.className='vs-ov';ov.setAttribute('role','dialog');ov.setAttribute('aria-label','Quanty vs Ledger');
- ov.innerHTML='<div class="vs-box"><button class="vs-x" aria-label="Close">×</button><canvas></canvas><p class="vs-note"><span class="vs-lv"></span> Each book starts with its own pretend SOL bank. Lines show P&amp;L % over time. Paper trading only, not financial advice.</p></div>';
- document.body.appendChild(ov);const cv=ov.querySelector('canvas'),close=()=>{cancelAnimationFrame(raf);ov&&ov.remove();ov=null};
+function open(){if(ov)return;ov=document.createElement('div');ov.className='vs-ov';ov.setAttribute('role','dialog');ov.setAttribute('aria-label','Quanty vs Ledger vs Twitter');
+ ov.innerHTML='<div class="vs-box"><button class="vs-x" aria-label="Close">×</button><p class="vs-note"><span class="vs-lv"></span> <span class="vs-bk">Each trader has their own separate paper bank.</span> Paper trading only, not financial advice.</p></div>';
+ document.body.appendChild(ov);const close=()=>{clearInterval(raf);ov&&ov.remove();ov=null};
  ov.addEventListener('click',e=>{if(e.target===ov||e.target.classList.contains('vs-x'))close()});
- (function fr(t){if(!ov)return;const r=cv.getBoundingClientRect(),dp=devicePixelRatio||1;if(cv.width!==Math.round(r.width*dp)){cv.width=Math.round(r.width*dp);cv.height=Math.round(r.height*dp)}
-  const X=cv.getContext('2d');X.setTransform(dp,0,0,dp,0,0);X.clearRect(0,0,r.width,r.height);board(X,0,0,r.width,r.height,t,true);const lvE=ov&&ov.querySelector('.vs-lv');if(lvE&&window.DeskBooks){const B=DeskBooks.get(),L=Object.values(B).filter(b=>b&&b.live);lvE.innerHTML=L.length?DeskBooks.badge(L.some(b=>b.delayed)):''}raf=requestAnimationFrame(fr)})(0)}
+ const lv=()=>{const e=ov&&ov.querySelector('.vs-lv');if(e&&window.DeskBooks){const B=DeskBooks.get(),L=Object.values(B).filter(b=>b&&b.live);e.innerHTML=L.length?DeskBooks.badge(L.some(b=>b.delayed)):''}const k=ov&&ov.querySelector('.vs-bk');if(k&&window.DeskBooks){const st=['quanty','ledger','twitter'].map(n=>DeskBooks.book(n)).filter(b=>b&&b.start).map(b=>b.start);k.textContent=st.length&&st.every(v=>v===st[0])?'Each trader has their own separate '+st[0]+' SOL paper bank.':'Each trader has their own separate paper bank.'}};lv();raf=setInterval(lv,2000)}
 /* score line for Ledger's bubble card */
 window.DeskVS={rect,series,cardHTML(){if(window.DeskBooks){const B0=DeskBooks.get(),B={};NM.forEach(n=>{if(B0[n]&&B0[n].traded)B[n]=B0[n]});const r=NM.filter(n=>B[n]).sort((a,b)=>B[b].pct-B[a].pct);return '<br><b>RACE</b>: '+NM.map(n=>B[n]?`<span style="color:${COL[n]}">${LAB[n][0]} ${f(B[n].pct)}</span>`:`<span class="mt">${LAB[n][0]} no trades</span>`).join(' · ')+(r.length?`<br><span class="mt">${LAB[r[0]]} leads</span>`:'')}const S=series(),lead=S.qc===S.lc?'tied':(S.qc>S.lc?'Quanty leads':'Ledger leads');
  return `<br><b>QUANTY vs LEDGER</b>: <span style="color:${QC}">${f(S.qc)}</span> vs <span style="color:${LC}">${f(S.lc)}</span> · ${lead}<br><span class="mt">W/L ${S.qw}-${S.ql} vs ${S.lw}-${S.ll}</span>`}};
