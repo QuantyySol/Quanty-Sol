@@ -31,7 +31,7 @@ function board(X,x,y,w,h,t,big){const S=series(),u=big?Math.min(w/300,h/170):w/2
   X.strokeStyle='#ffffff22';X.setLineDash([3*u,4*u]);X.lineWidth=1;X.beginPath();X.moveTo(cx,py(0));X.lineTo(cx+cw,py(0));X.stroke();X.setLineDash([]);
   R.forEach(r=>{const a=r.pts.length>1?r.pts:[[t0,0]].concat(r.pts);X.strokeStyle=r.c;X.lineWidth=2*u;X.shadowColor=r.c;X.shadowBlur=6;X.beginPath();a.forEach((p,i)=>i?X.lineTo(px(p[0]),py(p[1])):X.moveTo(px(p[0]),py(p[1])));X.stroke();X.shadowBlur=0;
    X.fillStyle=r.c;X.beginPath();X.arc(px(a[a.length-1][0]),py(r.cur),2.6*u*(1+.25*Math.sin(t/300)),0,7);X.fill()})}
- if(!R.length){X.textAlign='center';X.fillStyle='#8aa098';X.font='700 '+fs(11);X.fillText('Fresh 1 SOL books · race starts at the first paper trade',x+w/2,y+h*.55)}
+ if(!R.length){X.textAlign='center';X.fillStyle='#8aa098';X.font='700 '+fs(11);X.fillText('Fresh paper books · the race starts at the first trade',x+w/2,y+h*.55)}
  X.textAlign='left';X.font='700 '+fs(9);slots.forEach(sl=>{const r=R.find(z=>z.n===sl.n);if(r){X.fillStyle=COL[sl.n];X.fillText('W'+r.w+'·L'+r.l,sl.x-24*u,y+h-7*u)}});
  const lv=R.some(r=>r.live),dl=R.some(r=>r.live&&r.dl);if(lv){const c=dl?'#f5b342':'#3fe07a';X.fillStyle=c;X.globalAlpha=dl?1:.55+.45*Math.sin(t/190);X.beginPath();X.arc(x+w-36*u,y+h-10*u,2.6*u,0,7);X.fill();X.globalAlpha=1;X.font='800 '+fs(7);X.fillText(dl?'DELAYED':'LIVE',x+w-31*u,y+h-7.5*u)}
  if(!big){X.textAlign='right';X.fillStyle='#8aa098';X.font='600 '+fs(7);X.fillText('tap to expand',x+w-8*u,y+h-17*u)}
@@ -55,7 +55,7 @@ C.addEventListener('pointerdown',e=>{dn={x:e.clientX,y:e.clientY,t:performance.n
 C.addEventListener('pointerup',e=>{if(!dn)return;const m=Math.hypot(e.clientX-dn.x,e.clientY-dn.y)<8&&performance.now()-dn.t<450;dn=null;if(!m)return;const p=O.toCanvas(e.clientX,e.clientY),r=rect();if(p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h)open()});
 let ov=null,raf=0;
 function open(){if(ov)return;ov=document.createElement('div');ov.className='vs-ov';ov.setAttribute('role','dialog');ov.setAttribute('aria-label','Quanty vs Ledger');
- ov.innerHTML='<div class="vs-box"><button class="vs-x" aria-label="Close">×</button><canvas></canvas><p class="vs-note"><span class="vs-lv"></span> Each book starts at 1 SOL of pretend money. Lines show P&amp;L % over time. Paper trading only, not financial advice.</p></div>';
+ ov.innerHTML='<div class="vs-box"><button class="vs-x" aria-label="Close">×</button><canvas></canvas><p class="vs-note"><span class="vs-lv"></span> Each book starts with its own pretend SOL bank. Lines show P&amp;L % over time. Paper trading only, not financial advice.</p></div>';
  document.body.appendChild(ov);const cv=ov.querySelector('canvas'),close=()=>{cancelAnimationFrame(raf);ov&&ov.remove();ov=null};
  ov.addEventListener('click',e=>{if(e.target===ov||e.target.classList.contains('vs-x'))close()});
  (function fr(t){if(!ov)return;const r=cv.getBoundingClientRect(),dp=devicePixelRatio||1;if(cv.width!==Math.round(r.width*dp)){cv.width=Math.round(r.width*dp);cv.height=Math.round(r.height*dp)}
