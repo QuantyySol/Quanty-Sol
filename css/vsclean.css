@@ -1,0 +1,14 @@
+/* vsclean.css : readable three-way P&L scoreboard covering the VS board graph. */
+.vsc{position:absolute;z-index:2;pointer-events:none;display:flex;flex-direction:column;justify-content:center;gap:4%;padding:2% 3%;
+ background:linear-gradient(160deg,#0e1726,#0a0f18);border:1px solid rgba(150,190,255,.25);border-radius:14px;box-shadow:0 0 24px rgba(77,163,255,.18);font-family:Inter,system-ui,sans-serif;box-sizing:border-box}
+.vsc-g{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.vsc-c{text-align:center;border-top:3px solid var(--c);padding-top:8px}
+.vsc-n{color:var(--c);font-weight:900;letter-spacing:.1em;font-size:clamp(11px,1vw,15px)}
+.vsc-v{font-weight:900;font-size:clamp(20px,2.4vw,38px);line-height:1.15;font-variant-numeric:tabular-nums;margin:4px 0}
+.vsc-v.up{color:#4dffa0;text-shadow:0 0 14px rgba(77,255,160,.35)}.vsc-v.dn{color:#ff5c7a;text-shadow:0 0 14px rgba(255,92,122,.35)}
+.vsc-s{color:#c9d6e8;font-size:clamp(10px,.85vw,13px);font-variant-numeric:tabular-nums}
+.vsc-f{text-align:center;color:#a9b8cc;font-size:clamp(9px,.75vw,11px);font-weight:700;letter-spacing:.08em}
+.vsc-d{display:inline-block;width:7px;height:7px;border-radius:50%;background:#39ff88;box-shadow:0 0 8px #39ff88;margin-right:6px;vertical-align:1px}
+.vs-ov .vs-box canvas{display:none!important}
+.vsc-x{position:static;pointer-events:auto;padding:22px;margin:0 0 10px}.vsc-x .vsc-v{font-size:clamp(26px,5vw,46px)}
+@media(max-width:600px){.vsc{padding:3% 3%}.vsc-g{gap:6px}.vsc-v{font-size:clamp(18px,5.6vw,26px)}.vsc-s{font-size:10px}.vsc-n{font-size:11px}}
