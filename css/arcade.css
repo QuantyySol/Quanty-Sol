@@ -1,0 +1,12 @@
+/* arcade.css : breakroom arcade modal (AURORA RUN). A game only, nothing to do with money. */
+.arc-ov{position:fixed;inset:0;z-index:60;background:rgba(3,4,10,.86);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:12px}
+.arc-box{position:relative;width:min(1100px,100%);height:min(720px,100%);border-radius:18px;overflow:hidden;border:1px solid rgba(180,108,255,.45);box-shadow:0 0 40px rgba(180,108,255,.35),0 0 80px rgba(57,255,136,.15);background:#05040c}
+.arc-box canvas{display:block;width:100%;height:100%;touch-action:none;cursor:pointer}
+.arc-bar{position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:2}
+.arc-bar button{background:rgba(10,8,20,.8);border:1px solid rgba(180,108,255,.5);color:#eef6f2;border-radius:10px;font:700 14px/1 Inter,sans-serif;padding:8px 11px;cursor:pointer}
+.arc-bar button:hover,.arc-bar button:focus-visible{background:#1c1430;outline:none}
+.arc-pick{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);display:flex;gap:10px;z-index:2}
+.arc-pick button{background:rgba(10,8,20,.85);border:2px solid var(--c);color:var(--c);border-radius:12px;font:800 13px/1 Inter,sans-serif;letter-spacing:.08em;padding:10px 14px;cursor:pointer}
+.arc-pick button.on{background:color-mix(in srgb,var(--c) 22%,#0a0814);box-shadow:0 0 14px var(--c);color:#fff}
+.arc-hid{display:none!important}
+@media(max-width:600px){.arc-ov{padding:0}.arc-box{height:100%;border-radius:0;border:0}.arc-pick{bottom:13%;gap:6px}.arc-pick button{padding:9px 10px;font-size:12px}}
