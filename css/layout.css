@@ -22,5 +22,4 @@
 @media(max-width:760px){
  .ticker{gap:4px 12px;padding:6px 8px;font-size:12px}
  .ticker b{font-size:14px}
- .mini{transform:scale(.78);transform-origin:center}
 }
