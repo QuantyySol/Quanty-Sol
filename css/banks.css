@@ -1,0 +1,13 @@
+/* banks.css : per-trader paper bank cards (Stats) and ticker chips (Office). */
+#banks{margin:0 0 14px}
+.bn-h{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#b9c7da;margin:6px 0 8px}
+.bn-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.bn-c{background:linear-gradient(160deg,rgba(28,40,58,.72),rgba(14,20,30,.78));border:1px solid color-mix(in srgb,var(--c) 55%,transparent);border-radius:16px;padding:14px 16px;box-shadow:0 0 16px color-mix(in srgb,var(--c) 18%,transparent)}
+.bn-n{display:flex;justify-content:space-between;align-items:center;font-weight:900;letter-spacing:.08em;color:var(--c);margin-bottom:8px}
+.bn-pp{font-size:10px;color:#05070a;background:var(--c);border-radius:99px;padding:1px 7px;letter-spacing:.06em}
+.bn-r{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:3px 0;font-variant-numeric:tabular-nums}.bn-r i{font-style:normal;color:#a9b8cc}.bn-r b{color:#fff}
+.bn-r b.up{color:#4dffa0}.bn-r b.dn{color:#ff6b8a}
+#bn-tk{display:inline-flex;gap:10px}.bn-t{color:var(--c);font-size:12px;font-weight:700;white-space:nowrap}.bn-t b{color:#fff;font-size:13px}.bn-t em{font-style:normal;font-size:11px}
+.bn-t em.up{color:#4dffa0}.bn-t em.dn{color:#ff6b8a}
+@media(max-width:600px){.stage .ticker.dc-open #bn-tk{flex-wrap:wrap;justify-content:center}}
+@media(max-width:600px){.stage .ticker:not(.dc-open) #bn-tk{display:none}}
