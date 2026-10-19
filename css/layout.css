@@ -1,0 +1,26 @@
+/* layout.css : rooms are the hero; the trade feed is a compact wall monitor with tap-to-expand. */
+.stage .screen{left:auto;right:2%;top:4%;width:28%;height:36%;grid-template-columns:1fr;grid-template-rows:1.5fr 1fr;gap:4%;padding:1.2% 1.2% 1%;
+ border:2px solid #1f3a2a;box-shadow:0 0 22px rgba(57,255,136,.35),inset 0 0 0 1px #04120a;cursor:zoom-in;z-index:3;transition:all .28s ease}
+.stage .screen .ph{font-size:clamp(9px,.8vw,12px)}
+.stage .screen .feed{font-size:clamp(9px,.78vw,12px)}
+.stage .screen .pos{font-size:clamp(9px,.78vw,12px);padding:3px 6px;margin-bottom:4px}
+.stage .screen .pos svg{height:clamp(16px,2vw,30px)}
+.stage .screen.big{right:3%;top:3%;width:94%;height:84%;grid-template-columns:1.25fr 1fr;grid-template-rows:1fr;cursor:default;z-index:30;box-shadow:0 0 50px rgba(57,255,136,.45),0 0 0 100vmax rgba(3,5,8,.55)}
+.stage .screen.big .ph,.stage .screen.big .feed,.stage .screen.big .pos{font-size:clamp(11px,1vw,15px)}
+.stage .screen.big .pos svg{height:clamp(22px,4vw,60px)}
+.scr-x{position:absolute;right:6px;top:4px;z-index:4;background:#04120a;border:1px solid #1f3a2a;color:#9cffc8;border-radius:8px;font:700 11px/1 Inter,sans-serif;padding:4px 7px;cursor:pointer}
+.stage .wall,.stage .mwslot{left:2%;top:4%;width:22%;height:27%}
+@media(max-width:760px){
+ .stage .screen{left:3%;right:3%;top:1.5%;width:auto;height:15%;grid-template-columns:1fr;grid-template-rows:1fr;padding:2% 3%}
+ .stage .screen .pane+.pane{display:none}
+ .stage .screen .ph,.stage .screen .feed{font-size:11px}
+ .stage .screen.big{left:3%;right:3%;top:1.5%;width:auto;height:72%;grid-template-rows:1.3fr 1fr}
+ .stage .screen.big .pane+.pane{display:flex}
+ .stage .wall,.stage .mwslot{left:3%;top:18%;width:94%;height:11%}
+}
+.stage .screen .ph:first-child{padding-right:70px}
+@media(max-width:760px){
+ .ticker{gap:4px 12px;padding:6px 8px;font-size:12px}
+ .ticker b{font-size:14px}
+ .mini{transform:scale(.78);transform-origin:center}
+}
