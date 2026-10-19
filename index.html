@@ -17,7 +17,7 @@ h2{font-size:28px;margin:0 0 4px}p.sub{color:var(--mut);margin:0 0 18px}
 /* office */
 #office{padding:0}.stage{position:relative;width:100%;aspect-ratio:16/9;max-height:calc(100vh - 110px);margin:0 auto;background:#0a0f12;overflow:hidden}
 @media(max-width:760px){.stage{aspect-ratio:3/5;max-height:none}}
-canvas#oc{position:absolute;inset:0;width:100%;height:100%;display:block}
+canvas#oc{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
 .screen{position:absolute;left:36%;top:7%;width:60%;height:55%;background:#020a06;border-radius:10px;padding:1.1% 1.4%;display:grid;grid-template-columns:1.25fr 1fr;gap:1.2%;font-family:ui-monospace,Menlo,Consolas,monospace;color:#c8ffe0;overflow:hidden;box-shadow:inset 0 0 40px rgba(57,255,136,.08)}
 .screen:after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px)}
 @media(max-width:760px){.stage .screen{left:4%;top:3%;width:92%;height:46%;grid-template-columns:1fr;grid-template-rows:1fr 1fr}}
@@ -31,9 +31,15 @@ canvas#oc{position:absolute;inset:0;width:100%;height:100%;display:block}
 .ticker b{font-size:18px}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--r);margin-right:6px}.dot.on{background:var(--g);box-shadow:0 0 10px var(--g)}
 .row{display:flex;justify-content:space-between;gap:12px;padding:13px 2px;border-bottom:1px solid var(--line)}.row:last-child{border:0}.row .t{color:var(--mut);font-size:14px;min-width:130px}.row .m{flex:1}.row .x{font-weight:800}
 svg.chart{width:100%;height:240px}ul.rules li{margin:9px 0}footer{color:var(--mut);font-size:13px;text-align:center;padding:16px}
+#mini{position:fixed;z-index:20;width:72px;height:72px;left:calc(100% - 90px);top:calc(100% - 100px);touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+#mini .h{width:72px;height:72px;border-radius:50%;background:url(assets/robot_head.png) center/cover;border:2px solid var(--g);box-shadow:0 0 18px rgba(57,255,136,.45);position:relative}
+#mini .lid{position:absolute;left:0;right:0;top:0;height:0;background:#05070a;border-radius:50% 50% 0 0;transition:height .08s}#mini.blink .lid{height:50%}
+#mbub{position:fixed;z-index:21;max-width:260px;background:#0b1a12;border:1px solid var(--g);border-radius:14px;padding:10px 12px;font-size:14px;line-height:1.4;display:none;box-shadow:0 6px 24px rgba(0,0,0,.5)}
+#mbub b{color:var(--g)}#mbub .mt{color:var(--mut);font-size:12px}
 </style></head><body>
 <header><div class="bar"><div class="brand"><img src="assets/robot_head.png" alt="">Uncle Quanty, PhD<span class="long">&nbsp;— <span>Paper Trading Desk</span></span></div><span class="paper">PAPER · NOT FINANCIAL ADVICE</span>
 <nav><a href="#office">Office</a><a href="#positions">Positions</a><a href="#history">History</a><a href="#stats">Stats</a><a href="#kol">KOL Watch</a><a href="#rules">Strategy</a><a href="#about">About</a></nav></div></header>
+<div id="mini" aria-label="Uncle Quanty mini"><div class="h"><div class="lid"></div></div></div><div id="mbub"></div>
 <main>
 <section id="office"><div class="stage" id="stage"><canvas id="oc"></canvas>
 <div class="screen"><div class="pane"><div class="ph"><span>LIVE TRADES</span><span id="clk"></span></div><div class="feed" id="feed"></div></div>
@@ -62,7 +68,7 @@ const p=+d.pnl_sol||0;$('pnl').textContent=S(p);$('pnl').className=p>=0?'up':'dn
 const ids=tr.map(t=>t.ts+t.side+t.symbol),old=new Set(seen||ids);
 $('feed').innerHTML=tr.slice(0,14).map((t,i)=>`<div class="tr${old.has(ids[i])?'':' new'}"><span class="mt">${HM(t.ts)}</span><span class="tag ${t.side}">${t.side}</span><span class="sym">${E(t.symbol)}</span><span class="r">${t.size_sol!=null?(+t.size_sol).toFixed(3)+' SOL':''}<br><span class="mt">@${PR(t.price_sol)}</span></span><span class="r ${t.pnl_pct>=0?'up':'dn'}">${t.pnl_pct==null?'<span class="mt">open</span>':P(t.pnl_pct)}</span></div>`).join('')||'<div class="mt">waiting for the first trade…</div>';
 document.querySelectorAll('.tr.new').forEach(el=>el.animate([{opacity:0,transform:'translateX(-14px)',background:'rgba(57,255,136,.3)'},{opacity:1,transform:'none',background:'transparent'}],{duration:900,easing:'ease-out'}));
-const fresh=seen&&ids.find(i=>!old.has(i));if(fresh){const t=tr[ids.indexOf(fresh)];Bot.react(t)}seen=ids;
+const fresh=seen&&ids.find(i=>!old.has(i));if(fresh){const t=tr[ids.indexOf(fresh)];Bot.react(t);window.__mini&&__mini.onTrade(t)}seen=ids;
 const op=d.open||[];$('nop').textContent=op.length;
 $('poss').innerHTML=op.map(o=>`<div class="pos"><div class="top"><span>${E(o.symbol)}</span><span class="${o.pnl_pct>=0?'up':'dn'}">${P(o.pnl_pct)}</span></div><div class="mt">in ${(+o.cost_sol||0).toFixed(3)} SOL · now ${PR(o.price_sol)}</div>${spark((d.marks||{})[o.symbol],o.pnl_pct>=0)}</div>`).join('')||'<div class="mt">flat · scanning the boards…</div>';
 $('op').innerHTML=op.map(o=>`<div class="row"><span class="t">${T(o.opened_at)}</span><span class="m"><b>${E(o.symbol)}</b> · in ${(+o.cost_sol||0).toFixed(4)} SOL</span><span class="x ${o.pnl_pct>=0?'up':'dn'}">${P(o.pnl_pct)}</span></div>`).join('')||'<div class="row">Not holding anything right now.</div>';
@@ -83,10 +89,10 @@ let spots={};addEventListener('resize',fit);
 const Bot={x:520,y:760,tx:520,ty:760,state:'sit',timer:500,bubble:null,bt:0,mood:0,jump:0,rush:false,
  go(s,rush){const p=spots[s];this.tx=p.x;this.ty=p.y;this.state='walk';this.dest=s;this.rush=!!rush},
  say(t,ms,c){this.bubble={t,c:c||'#39ff88'};this.bt=ms/16},
- react(t){const loss=t.side==='STOP'||t.side==='TRAIL'||(t.pnl_pct!=null&&t.pnl_pct<0);this.go('desk',true);this.mood=loss?-1:1;this.jump=loss?0:45;
+ react(t){if(this.state==='held'||this.state==='drop'){this.y=this.fy||this.y;this.vy=0;drag=null}const loss=t.side==='STOP'||t.side==='TRAIL'||(t.pnl_pct!=null&&t.pnl_pct<0);this.go('desk',true);this.mood=loss?-1:1;this.jump=loss?0:45;
   const m=t.side==='BUY'?`BUY ${t.symbol}! ${(+t.size_sol).toFixed(3)} SOL`:`${t.side} ${t.symbol} ${P(t.pnl_pct)}`;this.say(m,9000,loss?'#ff5c6c':'#39ff88')}};
 const idle=['Hmm, charts…','Checking rug filters','Patience is a position','Scanning the boards','Hydrate. Then trade.'];
-function step(){const b=Bot;if(b.state==='walk'){const dx=b.tx-b.x,dy=b.ty-b.y,d=Math.hypot(dx,dy),sp=b.rush?6:2;if(d<sp){b.x=b.tx;b.y=b.ty;b.rush=false;b.state=b.dest==='desk'?'sit':'look';b.timer=b.dest==='desk'?900+Math.random()*900:220+Math.random()*220;if(b.dest!=='desk'&&Math.random()<.6)b.say(idle[Math.random()*idle.length|0],3000,'#cfe')}else{b.x+=dx/d*sp;b.y+=dy/d*sp}}
+function step(){const b=Bot;if(b.state==='held'){if(b.bt>0&&--b.bt<=0)b.bubble=null;return}if(b.state==='drop'){b.vy+=1.2;b.y+=b.vy;if(b.y>=b.fy){b.y=b.fy;if(Math.abs(b.vy)>3){b.vy=-b.vy*.45}else{b.vy=0;b.state='look';b.timer=200+Math.random()*80}}if(b.bt>0&&--b.bt<=0)b.bubble=null;return}if(b.state==='walk'){const dx=b.tx-b.x,dy=b.ty-b.y,d=Math.hypot(dx,dy),sp=b.rush?6:2;if(d<sp){b.x=b.tx;b.y=b.ty;b.rush=false;b.state=b.dest==='desk'?'sit':'look';b.timer=b.dest==='desk'?900+Math.random()*900:220+Math.random()*220;if(b.dest!=='desk'&&Math.random()<.6)b.say(idle[Math.random()*idle.length|0],3000,'#cfe')}else{b.x+=dx/d*sp;b.y+=dy/d*sp}}
  else if(--b.timer<=0){if(b.state==='sit')b.go(['cooler','window','board','plant'][Math.random()*4|0]);else b.go('desk')}if(b.bt>0&&--b.bt<=0)b.bubble=null;if(b.jump>0)b.jump--}
 function rr(x,y,w,h,r,f){X.fillStyle=f;X.beginPath();X.roundRect(x,y,w,h,r);X.fill()}
 function scene(t){const g=X.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0e1518');g.addColorStop(1,'#090d0f');X.fillStyle=g;X.fillRect(0,0,W,H);const fy=H*.78;
@@ -102,8 +108,9 @@ function scene(t){const g=X.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0e1
  rr(mx-14,my-14,mw+28,mh+28,16,'#1a2427');X.shadowColor='#39ff88';X.shadowBlur=30;rr(mx-2,my-2,mw+4,mh+4,10,'#04120a');X.shadowBlur=0;
  rr(mx+mw/2-30,my+mh+14,60,H*.06,4,'#223034');rr(mx+mw/2-110,my+mh+14+H*.06,220,12,6,'#223034');
  const dy=my+mh+14+H*.06+12;rr(mob?40:440,dy,mob?W-80:W-480,22,6,'#2c3a3e');X.fillStyle='#1c2629';X.fillRect(mob?70:470,dy+22,16,fy-dy-10);X.fillRect(W-(mob?86:70),dy+22,16,fy-dy-10)}
-function robot(t){const b=Bot,walk=b.state==='walk',sit=b.state==='sit',k=mob?1:1.25;const y=b.y-(b.jump?Math.abs(Math.sin(b.jump/6))*30:0),bob=walk?Math.sin(t/(b.rush?50:90))*3:Math.sin(t/600)*1.5;
- X.save();X.translate(b.x,y);X.scale(k,k);X.fillStyle='rgba(0,0,0,.35)';X.beginPath();X.ellipse(0,(b.y-y)/k+6,32,8,0,0,7);X.fill();
+function robot(t){const b=Bot,held=b.state==='held',walk=b.state==='walk'||held,sit=b.state==='sit',k=mob?1:1.25;const y=b.y-(b.jump?Math.abs(Math.sin(b.jump/6))*30:0),bob=walk?Math.sin(t/(b.rush?50:90))*3:Math.sin(t/600)*1.5;
+ const gy=(held||b.state==='drop')?b.fy:b.y,lift=Math.max(0,gy-y),sh=Math.max(.35,1-lift/260);X.fillStyle='rgba(0,0,0,.35)';X.beginPath();X.ellipse(b.x,gy+6,32*k*sh,8*k*sh,0,0,7);X.fill();
+ X.save();X.translate(b.x,y);X.scale(k,k);if(held)X.rotate(Math.sin(t/160)*.18);
  if(sit){rr(-30,-40,60,12,4,'#3a4a4e');X.fillStyle='#2a3639';X.fillRect(-3,-28,6,28)}
  const lg=walk?Math.sin(t/(b.rush?50:90))*11:0;X.fillStyle='#cfd8dc';X.fillRect(-13+lg*.3,-30-bob,8,sit?18:30);X.fillRect(5-lg*.3,-30-bob,8,sit?18:30);
  const by=-(sit?84:94)-bob;rr(-24,by,48,56,13,'#e8eef0');rr(-15,by+13,30,19,5,'#0a1a12');X.fillStyle=b.mood<0?'#ff5c6c':'#39ff88';X.fillRect(-11,by+19,22*((Math.sin(t/300)+1)/2*.6+.4),5);
@@ -112,6 +119,38 @@ function robot(t){const b=Bot,walk=b.state==='walk',sit=b.state==='sit',k=mob?1:
  if(head.complete&&head.naturalWidth)X.drawImage(head,-hs/2,-hs/2,hs,hs);else{X.fillStyle='#222';X.beginPath();X.arc(0,0,hs/2,0,7);X.fill()}X.restore();X.restore();
  if(b.bubble){X.font='bold 22px Inter,sans-serif';const tw=Math.min(X.measureText(b.bubble.t).width+28,W*.6),bx=Math.max(10,Math.min((mob?W:W*.36-20)-tw,b.x-tw/2)),byy=y+(hy-58)*k;
  rr(bx,byy,tw,40,14,'#0b1a12');X.strokeStyle=b.bubble.c;X.lineWidth=2;X.beginPath();X.roundRect(bx,byy,tw,40,14);X.stroke();X.fillStyle=b.bubble.c;X.fillText(b.bubble.t,bx+14,byy+27,tw-28)}}
+// ---- drag the robot (pointer events) ----
+let drag=null;const floorY=()=>({min:H*.80,max:H*(mob?.95:.97)}),toXY=e=>{const r=C.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height}};
+const grabLines=['WHEEE!','PUT ME DOWN!','I can fly!','Careful, I hold bags!','Whoa whoa whoa'];
+C.addEventListener('pointerdown',e=>{const p=toXY(e),b=Bot,k=mob?1:1.25;if(Math.hypot(p.x-b.x,p.y-(b.y-95*k))>110*k)return;
+ drag={id:e.pointerId,dy:0};C.setPointerCapture(e.pointerId);C.style.cursor='grabbing';b.state='held';b.rush=false;b.fy=b.y;b.say(grabLines[Math.random()*grabLines.length|0],2500,'#ff5cc8');e.preventDefault();moveTo(p)});
+function moveTo(p){const b=Bot,f=floorY();b.x=Math.max(50,Math.min(W-50,p.x));b.fy=Math.max(f.min,Math.min(f.max,p.y+60));b.y=Math.min(b.fy,p.y+60)-40}
+C.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;moveTo(toXY(e));e.preventDefault()});
+function release(e){if(!drag||e.pointerId!==drag.id)return;drag=null;C.style.cursor='grab';try{C.releasePointerCapture(e.pointerId)}catch(_){}const b=Bot;if(b.state==='held'){b.state='drop';b.vy=0;b.mood=0;b.say('Oof. Nice spot.',2500,'#cfe')}}
+C.addEventListener('pointerup',release);C.addEventListener('pointercancel',release);
+window.__bot=Bot;
+// ---- floating mini agent ----
+(function(){const m=$('mini'),bub=$('mbub'),SZ=72,ST='uq_mini_pos';let px,py,dn=null,moved=false,bobT=0,hop=0,hideT=0;
+ const clamp=()=>{px=Math.max(6,Math.min(innerWidth-SZ-6,px));py=Math.max(60,Math.min(innerHeight-SZ-6,py))};
+ try{const v=JSON.parse(localStorage.getItem(ST)||'null');if(v){px=v.x*innerWidth;py=v.y*innerHeight}}catch(_){}
+ if(px==null){px=innerWidth-SZ-16;py=innerHeight-SZ-24}clamp();
+ function place(){const b=Math.sin(bobT/30)*3-(hop>0?Math.sin(hop/30*Math.PI)*26:0);m.style.left=px+'px';m.style.top=(py+b)+'px';if(bub.style.display==='block')posBub()}
+ function posBub(){const w=bub.offsetWidth,h=bub.offsetHeight;let x=px+SZ/2-w/2,y=py-h-12;if(y<56)y=py+SZ+10;bub.style.left=Math.max(6,Math.min(innerWidth-w-6,x))+'px';bub.style.top=y+'px'}
+ function show(html,ms){bub.innerHTML=html;bub.style.display='block';posBub();clearTimeout(hideT);hideT=setTimeout(()=>bub.style.display='none',ms||6000)}
+ const goofy=['Buy high, cry later. (Paper only!)','My PhD is in vibes.','I run on SOL and snacks.','Fake money, real feelings.','Charts go up. Charts go down. I nap.'];
+ function card(t){const d=D||{};t=t||(d.trades||[])[0];const tl=t?`<b>${E(t.side)} ${E(t.symbol)}</b> · ${(+t.size_sol||0).toFixed(3)} SOL${t.pnl_pct!=null?' · '+P(t.pnl_pct):''}<br><span class="mt">${T(t.ts)}</span><br>`:'No trades yet.<br>';
+  return tl+`Bank <b>${d.bank_sol!=null?(+d.bank_sol).toFixed(4)+' SOL':'–'}</b><br><span class="mt">${goofy[Math.random()*goofy.length|0]}</span>`}
+ m.addEventListener('pointerdown',e=>{dn={id:e.pointerId,sx:e.clientX,sy:e.clientY,ox:px,oy:py};moved=false;m.setPointerCapture(e.pointerId);m.style.cursor='grabbing';e.preventDefault()});
+ m.addEventListener('pointermove',e=>{if(!dn||e.pointerId!==dn.id)return;const dx=e.clientX-dn.sx,dy=e.clientY-dn.sy;if(Math.hypot(dx,dy)>6)moved=true;if(moved){px=dn.ox+dx;py=dn.oy+dy;clamp();place()}});
+ function up(e){if(!dn||e.pointerId!==dn.id)return;dn=null;m.style.cursor='grab';try{m.releasePointerCapture(e.pointerId)}catch(_){}
+  if(!moved){bub.style.display==='block'?bub.style.display='none':show(card(),7000);return}
+  const tx=(px+SZ/2<innerWidth/2)?10:innerWidth-SZ-10,sx=px,t0=performance.now();(function an(n){const k=Math.min(1,(n-t0)/350),e2=1-Math.pow(1-k,3);px=sx+(tx-sx)*e2;place();if(k<1)requestAnimationFrame(an);else{try{localStorage.setItem(ST,JSON.stringify({x:px/innerWidth,y:py/innerHeight}))}catch(_){}}})(t0)}
+ m.addEventListener('pointerup',up);m.addEventListener('pointercancel',up);
+ addEventListener('resize',()=>{clamp();place()});
+ (function tick(){bobT++;if(hop>0)hop--;if(!dn)place();requestAnimationFrame(tick)})();
+ setInterval(()=>{m.classList.add('blink');setTimeout(()=>m.classList.remove('blink'),140)},3800);
+ window.__mini={onTrade(t){hop=30;show(card(t),9000)}};})();
+
 function loop(t){step();scene(t);robot(t);requestAnimationFrame(loop)}
 route();load();requestAnimationFrame(loop);setTimeout(()=>Bot.say('Welcome to the desk!',4000),800);
 </script></body></html>
