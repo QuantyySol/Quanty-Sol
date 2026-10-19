@@ -10,8 +10,8 @@ const pct=(b,s)=>((+b||0)/((+s)||1)-1)*100;
 function series(){const d=Desk.data||{},bh=d.bank_history||{},lb=d.ledger_book||{},now=Date.now();
  const map=(a,s)=>(Array.isArray(a)?a:[]).filter(p=>Array.isArray(p)&&p[1]!=null).map(p=>[Date.parse(p[0])||now,pct(p[1],s)]);
  let q=map(bh.quanty&&bh.quanty.length?bh.quanty:d.history,d.start_sol||1),l=map(bh.ledger,lb.start_sol||1);
- const qc=pct(d.bank_sol,d.start_sol||1),lc=lb.bank_sol!=null?pct(lb.bank_sol,lb.start_sol||1):0;
- if(d.bank_sol!=null)q.push([now,qc]);l.push([now,lc]);if(l.length<2)l.unshift([q.length?q[0][0]:now-6e5,0]);
+ const B=window.DeskBooks?DeskBooks.get():null,qc=B?B.quanty.pct:pct(d.bank_sol,d.start_sol||1),lc=B?B.ledger.pct:(lb.bank_sol!=null?pct(lb.bank_sol,lb.start_sol||1):0);
+ q.push([now,qc]);l.push([now,lc]);if(l.length<2)l.unshift([q.length?q[0][0]:now-6e5,0]);
  const s=d.stats||{};return{q,l,qc,lc,qw:Math.round(s.wins||0),ql:Math.round(s.losses||0),lw:lb.wins||0,ll:lb.losses||0}}
 const f=v=>(v>=0?'+':'')+v.toFixed(1)+'%';
 function face(X,x,y,r,who){if(who==='q'){X.save();X.beginPath();X.arc(x,y,r,0,7);X.clip();if(head.complete&&head.naturalWidth)X.drawImage(head,x-r,y-r,2*r,2*r);else{X.fillStyle='#0b1a12';X.fill()}X.restore()}
