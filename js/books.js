@@ -24,11 +24,12 @@ function get(){const o={};NAMES.forEach(n=>o[n]=book(n));return o}
 /* [[ms, pnl%]] ending at the current (live) value */
 function series(n){const b=book(n);if(!b)return[];const a=b.hist.filter(p=>Array.isArray(p)&&num(p[1])!=null).map(p=>[Date.parse(p[0])||0,(p[1]/b.start-1)*100]).filter(p=>p[0]);a.push([Date.now(),b.pct]);return a}
 /* daily P&L rows {name,date,pnl,pct}: from bank_history (close-to-close, first day vs start, today uses live bank); else from closed trades */
-function daily(n){const b=book(n);if(!b||!b.traded)return[];const day=ms=>new Date(ms).toISOString().slice(0,10),last={};
- b.hist.forEach(p=>{const t=Date.parse(p&&p[0]),v=num(p&&p[1]);if(t&&v!=null)last[day(t)]=v});
- if(Object.keys(last).length){last[day(Date.now())]=b.bank;let prev=b.start;return Object.keys(last).sort().map(k=>{const r={name:n,date:k,pnl:last[k]-prev,pct:(last[k]/prev-1)*100};prev=last[k];return r})}
- const g={};(b.closed||[]).forEach(c=>{const t=Date.parse(c.closed_at),p=num(c.pnl_sol);if(t&&p!=null)g[day(t)]=(g[day(t)]||0)+p});
- return Object.keys(g).sort().map(k=>({name:n,date:k,pnl:g[k],pct:g[k]/b.start*100}))}
+function daily(n){const b=book(n);if(!b||!b.traded)return[];const day=ms=>new Date(ms).toISOString().slice(0,10),g={};
+ (b.closed||[]).forEach(c=>{const t=Date.parse(c.closed_at),p=num(c.pnl_sol);if(t&&p!=null)g[day(t)]=(g[day(t)]||0)+p});
+ if(Object.keys(g).length)return Object.keys(g).sort().map(k=>({name:n,date:k,pnl:g[k],pct:g[k]/b.start*100,kind:'realized'}));
+ const first={},last={};b.hist.forEach(p=>{const t=Date.parse(p&&p[0]),v=num(p&&p[1]);if(t&&v!=null){const k=day(t);if(!(k in first))first[k]=v;last[k]=v}});
+ if(!Object.keys(last).length)return[];last[day(Date.now())]=b.bank;if(!(day(Date.now()) in first))first[day(Date.now())]=b.bank;let prev=null;
+ return Object.keys(last).sort().map(k=>{const o=prev??first[k],r={name:n,date:k,pnl:last[k]-o,pct:(last[k]/o-1)*100,kind:'bank'};prev=last[k];return r})}
 function topDays(k){let r=[];NAMES.forEach(n=>r=r.concat(daily(n)));return r.filter(x=>Math.abs(x.pnl)>1e-9).sort((a,b)=>b.pnl-a.pnl).slice(0,k||5)}
 const fS=v=>(v>=0?'+':'')+v.toFixed(4),fP=v=>(v>=0?'+':'')+v.toFixed(1)+'%';
 const badge=dl=>'<span class="lq-dot'+(dl?' dl':'')+'"></span><span class="lq-tag'+(dl?' dl':'')+'">'+(dl?'DELAYED':'LIVE')+'</span>';
