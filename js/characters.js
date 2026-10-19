@@ -131,7 +131,7 @@ function initTabs(){const box=document.getElementById('minis'),bub=document.getE
  if(box.querySelector('.mini'))box.innerHTML='';
  const SZ=64;let hideT=0,openFor=null;
  const posBub=m=>{const r=m.el.getBoundingClientRect(),w=bub.offsetWidth,h=bub.offsetHeight;let x=r.left+SZ/2-w/2,y=r.top-h-12;if(y<56)y=r.bottom+18;bub.style.left=Math.max(6,Math.min(innerWidth-w-6,x))+'px';bub.style.top=y+'px'};
- const show=(m,html,ms)=>{bub.style.setProperty('--c',m.col);bub.style.borderColor=m.col;bub.innerHTML=html;bub.style.display='block';openFor=m;posBub(m);clearTimeout(hideT);hideT=setTimeout(()=>{bub.style.display='none';openFor=null},ms||8000)};
+ const show=(m,html,ms)=>{const f=typeof html==='function'?html:()=>html;bub._refresh=f;bub._pos=()=>posBub(m);bub.style.setProperty('--c',m.col);bub.style.borderColor=m.col;bub.innerHTML=f();bub.style.display='block';openFor=m;posBub(m);clearTimeout(hideT);hideT=setTimeout(()=>{bub.style.display='none';openFor=null},ms||8000)};
  const latest=()=>((Desk.data||{}).trades||[])[0];
  const cards={
   quanty(t){const d=Desk.data||{};t=t||latest();return (t?`<b>${E(t.side)} ${E(t.symbol)}</b>${SG(t.strategy)} · ${(+t.size_sol||0).toFixed(3)} SOL${t.pnl_pct!=null?' · '+P(t.pnl_pct):''}<br><span class="mt">${U().T?U().T(t.ts):''}</span><br>`:'No trades yet.<br>')+`Bank <b>${window.DeskBooks&&d.bank_sol!=null?DeskBooks.get().quanty.bank.toFixed(4)+' SOL':d.bank_sol!=null?(+d.bank_sol).toFixed(4)+' SOL':'–'}</b><br><span class="mt">${pick(['Buy high, cry later. (Paper only!)','My PhD is in vibes.','I run on SOL and snacks.','Fake money, real feelings.'])}</span>`},
@@ -152,14 +152,14 @@ function initTabs(){const box=document.getElementById('minis'),bub=document.getE
   el.addEventListener('pointerdown',e=>{dn={id:e.pointerId,sx:e.clientX,sy:e.clientY,ox:m.px,oy:m.py};moved=false;try{el.setPointerCapture(e.pointerId)}catch(_){}el.style.cursor='grabbing';m.drag=true;e.preventDefault()});
   el.addEventListener('pointermove',e=>{if(!dn||e.pointerId!==dn.id)return;const dx=e.clientX-dn.sx,dy=e.clientY-dn.sy;if(Math.hypot(dx,dy)>6)moved=true;if(moved){m.px=dn.ox+dx;m.py=dn.oy+dy;clamp(m);place(m)}});
   const up=e=>{if(!dn||e.pointerId!==dn.id)return;dn=null;m.drag=false;el.style.cursor='grab';try{el.releasePointerCapture(e.pointerId)}catch(_){}
-   if(!moved){if(openFor===m&&bub.style.display==='block'){bub.style.display='none';openFor=null}else{show(m,cards[m.id]());if(m.a){m.a.say(m.id==='ledger'?'What. I am busy.':'YOU RANG?!',2500)}else Desk.quanty&&Desk.quanty.say('Hi!',2000)}return}
+   if(!moved){if(openFor===m&&bub.style.display==='block'){bub.style.display='none';openFor=null}else{show(m,()=>cards[m.id]());if(m.a){m.a.say(m.id==='ledger'?'What. I am busy.':'YOU RANG?!',2500)}else Desk.quanty&&Desk.quanty.say('Hi!',2000)}return}
    const right=m.px+SZ/2>=innerWidth/2,tx=right?innerWidth-SZ-10:10,sx=m.px,t0=performance.now();
    (function an(n){const k=Math.min(1,(n-t0)/350),e2=1-Math.pow(1-k,3);m.px=sx+(tx-sx)*e2;place(m);if(k<1)requestAnimationFrame(an);else{try{localStorage.setItem(m.ST,JSON.stringify({x:m.px/innerWidth,y:m.py/innerHeight,s:right?'r':'l'}))}catch(_){}}})(t0)};
   el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)});
  addEventListener('resize',()=>M.forEach(m=>{clamp(m);place(m)}));
  (function tk(){M.forEach(m=>{m.bob++;if(m.hop>0)m.hop--;if(!m.drag)place(m)});requestAnimationFrame(tk)})();
  setInterval(()=>{const m=pick(M);m.el.classList.add('blink');setTimeout(()=>m.el.classList.remove('blink'),140)},2200);
- tabs={M,onTrade(t,loss,win,buy){const m=loss?M[1]:(buy?M[0]:M[2]);M.forEach(x=>{if(x.id!=='ledger'||loss)x.hop=30});show(m,cards[m.id](t),9000)}};
+ tabs={M,onTrade(t,loss,win,buy){const m=loss?M[1]:(buy?M[0]:M[2]);M.forEach(x=>{if(x.id!=='ledger'||loss)x.hop=30});show(m,()=>cards[m.id](t),9000)}};
  window.__chars={ledger,twitter,tabs}}
 if(document.readyState==='complete')initTabs();else addEventListener('load',initTabs);
 })();
