@@ -1,0 +1,18 @@
+/* breakroom.css */
+.stage canvas.brk{position:absolute;inset:0;width:100%;height:100%;z-index:8;transform:translateX(100%);transition:transform .45s cubic-bezier(.2,.8,.2,1);touch-action:none;cursor:grab;display:block}
+.stage canvas.brk.show{transform:none}
+.brk-nav{position:absolute;z-index:9;left:50%;top:1.2%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
+.brk-tabs,.brk-fol{display:flex;gap:2px;background:rgba(5,7,10,.78);border:1px solid #2a2238;border-radius:99px;padding:3px;backdrop-filter:blur(4px)}
+.brk-tabs button,.brk-fol button{background:none;border:0;color:#8aa098;font:700 13px/1 Inter,sans-serif;padding:7px 12px;border-radius:99px;cursor:pointer}
+.brk-tabs button.on{background:#1c1430;color:#d9b8ff;box-shadow:0 0 12px rgba(180,108,255,.35)}
+.brk-fol span{color:#8aa098;font:600 11px/1 Inter,sans-serif;padding:7px 4px 7px 9px;letter-spacing:.06em;text-transform:uppercase}
+.brk-fol button{padding:6px 9px;color:var(--c)}.brk-fol button.on{background:color-mix(in srgb,var(--c) 22%,transparent);box-shadow:0 0 10px var(--c)}
+.brlog{position:absolute;z-index:9;right:1.5%;bottom:13%;width:min(340px,44%);background:rgba(8,10,16,.9);border:1px solid #2a2238;border-radius:12px;color:#eef6f2;font:13px/1.45 Inter,sans-serif;display:none}
+.stage.in-brk .brlog{display:block}
+.brlog summary{cursor:pointer;padding:8px 12px;font-weight:800;color:#d9b8ff;list-style:none}.brlog summary::-webkit-details-marker{display:none}
+.brlog summary .n{background:#1c1430;border-radius:99px;padding:1px 7px;margin-left:4px;font-size:11px}
+.brlog ol{list-style:none;margin:0;padding:0 12px 10px;max-height:min(260px,40vh);overflow:auto}
+.brlog li{padding:6px 0;border-top:1px solid #1b1628}.brlog .mt{color:#8aa098;font-size:11px}.brlog .rt{color:#8aa098;font-size:11px}
+@media(max-width:760px){.brk-nav{top:30%;gap:4px}.brk-tabs button{padding:6px 10px;font-size:12px}.brk-fol button{padding:5px 8px}
+ .brlog{left:3%;right:3%;width:auto;bottom:3%}}
+@media(max-width:760px){.stage.in-brk .brk-nav{top:1.2%}}
