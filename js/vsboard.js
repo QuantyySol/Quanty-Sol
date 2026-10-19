@@ -5,7 +5,7 @@
 if(!window.Desk||!Desk.office){console.warn('vsboard: Desk API missing');return}
 const O=Desk.office,QC='#39ff88',LC='#ffbf3f';
 const head=new Image();head.src='assets/robot_head.png';
-const rect=()=>O.mobile?{x:440,y:840,w:300,h:140}:{x:56,y:438,w:228,h:134},old=()=>O.mobile?{x:440,y:840,w:300,h:140}:{x:60,y:420,w:220,h:150};
+const rect=()=>O.mobile?{x:70,y:430,w:660,h:300}:{x:56,y:438,w:228,h:134},old=()=>O.mobile?{x:440,y:840,w:300,h:140}:{x:60,y:420,w:220,h:150};
 const pct=(b,s)=>((+b||0)/((+s)||1)-1)*100;
 function series(){const d=Desk.data||{},bh=d.bank_history||{},lb=d.ledger_book||{},now=Date.now();
  const map=(a,s)=>(Array.isArray(a)?a:[]).filter(p=>Array.isArray(p)&&p[1]!=null).map(p=>[Date.parse(p[0])||now,pct(p[1],s)]);
@@ -41,7 +41,7 @@ function board(X,x,y,w,h,t,big){const S=series(),u=big?w/300:w/220,fs=n=>Math.ro
  X.restore();return S}
 /* office actor drawn behind everyone (y=-1), covering the old whiteboard */
 let pointing=0;
-O.addActor({id:'vsboard',y:-1,draw(X,t){const r=rect(),o=old();X.fillStyle='#0a0f12';X.fillRect(o.x-4,o.y-4,o.w+8,o.h+8);board(X,r.x,r.y,r.w,r.h,t,false);
+O.addActor({id:'vsboard',y:-.5,draw(X,t){const r=rect(),o=old();X.fillStyle='#0a0f12';X.fillRect(o.x-4,o.y-4,o.w+8,o.h+8);board(X,r.x,r.y,r.w,r.h,t,false);
  const L=Desk.actors.find(a=>a.id==='ledger');if(pointing>0&&L){pointing--;const k=O.mobile?1:1.25,hx=L.x+(r.x+r.w/2<L.x?-40:40)*k,hy=L.y-80*k;X.strokeStyle=LC;X.lineWidth=4;X.lineCap='round';X.setLineDash([2,7]);X.beginPath();X.moveTo(hx,hy);X.lineTo(r.x+r.w/2,r.y+r.h);X.stroke();X.setLineDash([]);X.fillStyle='#ff5c6c';X.font='900 34px Inter,sans-serif';X.fillText('!',hx-6,hy-20+Math.sin(t/90)*4)}}});
 /* agents wander up and react */
 const act=id=>Desk.actors.find(a=>a.id===id);
