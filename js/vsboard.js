@@ -5,7 +5,7 @@
 if(!window.Desk||!Desk.office){console.warn('vsboard: Desk API missing');return}
 const O=Desk.office,QC='#39ff88',LC='#ffbf3f';
 const head=new Image();head.src='assets/robot_head.png';
-const rect=()=>O.mobile?{x:70,y:430,w:660,h:300}:{x:56,y:438,w:228,h:134},old=()=>O.mobile?{x:440,y:840,w:300,h:140}:{x:60,y:420,w:220,h:150};
+const rect=()=>O.mobile?{x:70,y:430,w:660,h:300}:{x:470,y:92,w:640,h:330},old=()=>O.mobile?{x:440,y:840,w:300,h:140}:{x:60,y:420,w:220,h:150};
 const pct=(b,s)=>((+b||0)/((+s)||1)-1)*100;
 const NM=['quanty','ledger','twitter'],COL={quanty:QC,ledger:LC,twitter:'#5cc8ff'},LAB={quanty:'QUANTY',ledger:'LEDGER',twitter:'TWITTER'};
 function series(){const B=window.DeskBooks;const o={rows:[]};
@@ -37,7 +37,8 @@ function board(X,x,y,w,h,t,big){const S=series(),u=big?Math.min(w/300,h/170):w/2
  X.restore();return S}
 /* office actor drawn behind everyone (y=-1), covering the old whiteboard */
 let pointing=0;
-O.addActor({id:'vsboard',y:-.5,draw(X,t){const r=rect(),o=old();X.fillStyle='#0a0f12';X.fillRect(o.x-4,o.y-4,o.w+8,o.h+8);board(X,r.x,r.y,r.w,r.h,t,false);
+O.addActor({id:'vsboard-cover',y:-.95,draw(X){const o=old(),wg=X.createLinearGradient(0,0,0,O.height);wg.addColorStop(0,'#0e1518');wg.addColorStop(1,'#090d0f');X.fillStyle=wg;X.fillRect(o.x-4,o.y-4,o.w+8,o.h+8)}});
+O.addActor({id:'vsboard',y:-.5,draw(X,t){const r=rect();board(X,r.x,r.y,r.w,r.h,t,false);
  const L=Desk.actors.find(a=>a.id==='ledger');if(pointing>0&&L){pointing--;const k=O.mobile?1:1.25,hx=L.x+(r.x+r.w/2<L.x?-40:40)*k,hy=L.y-80*k;X.strokeStyle=LC;X.lineWidth=4;X.lineCap='round';X.setLineDash([2,7]);X.beginPath();X.moveTo(hx,hy);X.lineTo(r.x+r.w/2,r.y+r.h);X.stroke();X.setLineDash([]);X.fillStyle='#ff5c6c';X.font='900 34px Inter,sans-serif';X.fillText('!',hx-6,hy-20+Math.sin(t/90)*4)}}});
 /* agents wander up and react */
 const act=id=>Desk.actors.find(a=>a.id===id);
@@ -59,6 +60,6 @@ function open(){if(ov)return;ov=document.createElement('div');ov.className='vs-o
  (function fr(t){if(!ov)return;const r=cv.getBoundingClientRect(),dp=devicePixelRatio||1;if(cv.width!==Math.round(r.width*dp)){cv.width=Math.round(r.width*dp);cv.height=Math.round(r.height*dp)}
   const X=cv.getContext('2d');X.setTransform(dp,0,0,dp,0,0);X.clearRect(0,0,r.width,r.height);board(X,0,0,r.width,r.height,t,true);const lvE=ov&&ov.querySelector('.vs-lv');if(lvE&&window.DeskBooks){const B=DeskBooks.get(),L=Object.values(B).filter(b=>b&&b.live);lvE.innerHTML=L.length?DeskBooks.badge(L.some(b=>b.delayed)):''}raf=requestAnimationFrame(fr)})(0)}
 /* score line for Ledger's bubble card */
-window.DeskVS={series,cardHTML(){if(window.DeskBooks){const B0=DeskBooks.get(),B={};NM.forEach(n=>{if(B0[n]&&B0[n].traded)B[n]=B0[n]});const r=NM.filter(n=>B[n]).sort((a,b)=>B[b].pct-B[a].pct);return '<br><b>RACE</b>: '+NM.map(n=>B[n]?`<span style="color:${COL[n]}">${LAB[n][0]} ${f(B[n].pct)}</span>`:`<span class="mt">${LAB[n][0]} no trades</span>`).join(' · ')+(r.length?`<br><span class="mt">${LAB[r[0]]} leads</span>`:'')}const S=series(),lead=S.qc===S.lc?'tied':(S.qc>S.lc?'Quanty leads':'Ledger leads');
+window.DeskVS={rect,series,cardHTML(){if(window.DeskBooks){const B0=DeskBooks.get(),B={};NM.forEach(n=>{if(B0[n]&&B0[n].traded)B[n]=B0[n]});const r=NM.filter(n=>B[n]).sort((a,b)=>B[b].pct-B[a].pct);return '<br><b>RACE</b>: '+NM.map(n=>B[n]?`<span style="color:${COL[n]}">${LAB[n][0]} ${f(B[n].pct)}</span>`:`<span class="mt">${LAB[n][0]} no trades</span>`).join(' · ')+(r.length?`<br><span class="mt">${LAB[r[0]]} leads</span>`:'')}const S=series(),lead=S.qc===S.lc?'tied':(S.qc>S.lc?'Quanty leads':'Ledger leads');
  return `<br><b>QUANTY vs LEDGER</b>: <span style="color:${QC}">${f(S.qc)}</span> vs <span style="color:${LC}">${f(S.lc)}</span> · ${lead}<br><span class="mt">W/L ${S.qw}-${S.ql} vs ${S.lw}-${S.ll}</span>`}};
 })();
