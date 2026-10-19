@@ -11,3 +11,10 @@
 .bn-t em.up{color:#4dffa0}.bn-t em.dn{color:#ff6b8a}
 @media(max-width:600px){.stage .ticker.dc-open #bn-tk{flex-wrap:wrap;justify-content:center}}
 @media(max-width:600px){.stage .ticker:not(.dc-open) #bn-tk{display:none}}
+/* desktop status bar: one clean bar. Per-trader bank chips replace the duplicate Quanty bank/P&L; the live-quotes strip shrinks with ellipsis and never overlaps. */
+@media(min-width:601px){
+ .stage .ticker{overflow:hidden}
+ .stage .ticker>span:has(#bank),.stage .ticker>span:has(#pnl){display:none!important}
+ .stage .ticker>#bn-tk{order:2;flex:0 0 auto;gap:14px}
+ .stage .ticker>#lq-strip{order:3;flex:0 1 auto;min-width:0;max-width:360px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#a9b8cc}
+}
