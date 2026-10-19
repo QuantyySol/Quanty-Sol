@@ -3,10 +3,11 @@
 'use strict';
 if(!window.Desk)return;
 const E=s=>(Desk.utils&&Desk.utils.E?Desk.utils.E(s):String(s??'')),pc=v=>`<span class="${v>=0?'up':'dn'}">${v>=0?'+':''}${v.toFixed(1)}%</span>`;
+const bk=n=>{const b=window.DeskBooks&&DeskBooks.book(n);return b&&b.bank!=null?`${b.bank.toFixed(3)} SOL${b.pct!=null?' '+pc(b.pct):''}`:'bank n/a'};
 const info={
- QUANTY(){const B=window.DeskBooks&&DeskBooks.get();return B&&B.quanty?`${B.quanty.bank.toFixed(3)} SOL ${pc(B.quanty.pct)}`:'…'},
- LEDGER(){const B=window.DeskBooks&&DeskBooks.get();if(!B||!B.ledger||!B.ledger.traded)return'no trades yet';return `book ${B.ledger.bank.toFixed(3)} ${pc(B.ledger.pct)}`},
- TWITTER(){const B=window.DeskBooks&&DeskBooks.get();if(B&&B.twitter&&B.twitter.traded)return `book ${B.twitter.bank.toFixed(3)} ${pc(B.twitter.pct)}`;const t=((Desk.data||{}).trades||[])[0];return 'no trades yet'},
+ QUANTY(){return bk('quanty')},
+ LEDGER(){return bk('ledger')},
+ TWITTER(){return bk('twitter')},
  DESIGNER(){return 'designer · ships UI'}};
 function paint(){document.querySelectorAll('#minis .mini').forEach(m=>{const nm=m.querySelector('.nm');if(!nm)return;let w=m.querySelector('.dk-t');
  if(!w){w=document.createElement('div');w.className='dk-t';nm.after(w);w.appendChild(nm);const i=document.createElement('div');i.className='dk-i';w.appendChild(i)}
