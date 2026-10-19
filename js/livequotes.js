@@ -95,7 +95,7 @@ function publish(){var d=D();if(!d)return;var L=compute(d);
 function poll(){
   timer=null; if(document.hidden)return; var d=D(); if(!d||busy){schedule();return;}
   var ms=[],seen={}; positions(d).forEach(function(x){if(!seen[x.p.mint]){seen[x.p.mint]=1;ms.push(x.p.mint);}});
-  if(!ms.length){publish();schedule();return;}
+  if(!ms.length){lastOk=Date.now();publish();schedule();return;}
   var jobs=[];for(var i=0;i<ms.length;i+=MAXB)jobs.push(fetchBatch(ms.slice(i,i+MAXB),+d.sol_usd||0));
   busy=true;
   Promise.all(jobs).then(function(){lastOk=Date.now();backoff=0;},function(){backoff=Math.min(60000,(backoff||EVERY)*2);})
