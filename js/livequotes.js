@@ -10,9 +10,16 @@
 var API="https://api.dexscreener.com/tokens/v1/solana/", B58=/^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 var EVERY=5000, MAXB=30, backoff=0, timer=null, busy=false, quotes={}, lastOk=0;
 function D(){return (window.Desk&&window.Desk.data)||null;}
+/* Books: Quanty always from the top-level (live-overlaid) fields; others from d.books{ledger,twitter,...} when the
+   exporter provides it, else ledger_book as a fallback. */
+function bookSrc(d){
+  var out={quanty:{open:d.open||[],bank_sol:d.bank_sol,cash_sol:null,start_sol:d.start_sol}};
+  if(d.books&&typeof d.books==="object"){for(var k in d.books)if(k!=="quanty"&&d.books[k]&&typeof d.books[k]==="object")out[k]=d.books[k];}
+  else if(d.ledger_book)out.ledger=d.ledger_book;
+  return out;
+}
 function positions(d){
-  var out=[]; (d.open||[]).forEach(function(o){out.push({p:o,book:"quanty"});});
-  ((d.ledger_book||{}).open||[]).forEach(function(o){out.push({p:o,book:"ledger"});});
+  var out=[],B=bookSrc(d); for(var k in B)(B[k].open||[]).forEach(function(o){out.push({p:o,book:k});});
   return out.filter(function(x){return typeof x.p.mint==="string"&&B58.test(x.p.mint);});
 }
 function pick(pairs,mint,solUsd){
@@ -33,7 +40,7 @@ function fetchBatch(ms,solUsd){
 }
 function compute(d){
   var now=Date.now(), sol=+d.sol_usd||0, live={positions:{},books:{},updated:new Date(lastOk||now).toISOString(),ok:now-lastOk<20000};
-  var val={quanty:0,ledger:0}, stale={quanty:false,ledger:false};
+  var B=bookSrc(d), val={}, stale={}; for(var bk in B){val[bk]=0;stale[bk]=false;}
   positions(d).forEach(function(x){
     var o=x.p, q=quotes[o.mint], fresh=q&&now-q.t<30000, entry=+o.entry_price_sol||0, cost=+o.cost_sol||0;
     var qty=+o.qty||(entry?cost/entry:0), price=fresh?q.price_sol:(+o.price_sol||null);
@@ -45,12 +52,12 @@ function compute(d){
       updated:new Date(fresh?q.t:(Date.parse(o.mark_ts)||now)).toISOString(),delayed:!fresh,source:fresh?"dexscreener":"desk"};
     val[x.book]+=value||0; if(!fresh)stale[x.book]=true;
   });
-  var lb=d.ledger_book||{}, qOpenCost=0; (d.open||[]).forEach(function(o){qOpenCost+=(+o.cost_sol||0)+(+o.unreal_sol||0);});
-  /* derive cash from bank_sol (the live feed overlays bank_sol/open but not cash_sol, so cash_sol can be stale) */
-  var qCash=d.bank_sol!=null?(+d.bank_sol)-qOpenCost:(+d.cash_sol||0);
-  function book(cash,v,start,n){var bank=cash+v;return {bank:bank,cash:cash,pnl_sol:bank-start,pnl_pct:(bank/start-1)*100,open:n};}
-  live.books.quanty=book(qCash,val.quanty,+d.start_sol||1,(d.open||[]).length); live.books.quanty.delayed=stale.quanty;
-  if(lb.cash_sol!=null||lb.bank_sol!=null){live.books.ledger=book(lb.cash_sol!=null?+lb.cash_sol:+lb.bank_sol,lb.cash_sol!=null?val.ledger:0,+lb.start_sol||1,(lb.open||[]).length);live.books.ledger.delayed=stale.ledger;}
+  function book(src,v){var oc=0;(src.open||[]).forEach(function(o){oc+=(+o.cost_sol||0)+(+o.unreal_sol||0);});
+    /* cash: explicit cash_sol (non-quanty books), else bank_sol minus open value at the desk mark (consistent with the live overlay) */
+    var cash=src.cash_sol!=null?+src.cash_sol:(src.bank_sol!=null?(+src.bank_sol)-oc:null); if(cash==null)return null;
+    var start=+src.start_sol||1,bank=cash+v;return {bank:bank,cash:cash,pnl_sol:bank-start,pnl_pct:(bank/start-1)*100,open:(src.open||[]).length};}
+  for(var k in B){var r=book(B[k],val[k]||0);if(r){r.delayed=stale[k];live.books[k]=r;}}
+  if(!live.books.quanty)live.books.quanty={bank:+d.bank_sol||0,cash:0,pnl_sol:0,pnl_pct:0,open:0,delayed:true};
   if(sol)live.books.quanty.bank_usd=live.books.quanty.bank*sol;
   return live;
 }
@@ -79,7 +86,7 @@ function paint(L){
   if(tk&&!s){s=document.createElement("span");s.id="lq-strip";tk.appendChild(s);}
   if(s){var n=0,mcs=[];for(var m in L.positions){n++;var p=L.positions[m];if(p.book==="quanty")mcs.push((p.symbol||"?")+" "+(fmtMC(p.mc_usd)||"--")+" "+fmtP(p.pnl_pct));}
     var dl=!L.ok||(q&&q.delayed); s.innerHTML=badge(dl)+" "+(mcs.length?mcs.slice(0,4).join(" · ")+(mcs.length>4?" +"+(mcs.length-4):""):"no open coins")+
-      (L.books.ledger?" · Ledger "+fmtP(L.books.ledger.pnl_pct):"");}
+      (L.books.ledger?" · Ledger "+fmtP(L.books.ledger.pnl_pct):"")+(L.books.twitter?" · Twitter "+fmtP(L.books.twitter.pnl_pct):"");}
 }
 var CORE=null; /* index.html core keeps Desk.live.state / .lagSec (live-feed status); preserve them */
 function publish(){var d=D();if(!d)return;var L=compute(d);
