@@ -80,7 +80,10 @@ function paint(L){
     var dl=!L.ok||(q&&q.delayed); s.innerHTML=badge(dl)+" "+(mcs.length?mcs.slice(0,4).join(" · ")+(mcs.length>4?" +"+(mcs.length-4):""):"no open coins")+
       (L.books.ledger?" · Ledger "+fmtP(L.books.ledger.pnl_pct):"");}
 }
-function publish(){var d=D();if(!d)return;var L=compute(d);window.Desk.live=L;paint(L);
+var CORE=null; /* index.html core keeps Desk.live.state / .lagSec (live-feed status); preserve them */
+function publish(){var d=D();if(!d)return;var L=compute(d);
+  if(CORE)["state","lagSec"].forEach(function(n){Object.defineProperty(L,n,{enumerable:true,get:function(){return CORE[n];}});});
+  window.Desk.live=L;paint(L);
   try{window.dispatchEvent(new CustomEvent("desk:live",{detail:L}));}catch(e){}}
 function poll(){
   timer=null; if(document.hidden)return; var d=D(); if(!d||busy){schedule();return;}
@@ -95,7 +98,7 @@ function schedule(){if(!timer&&!document.hidden)timer=setTimeout(poll,EVERY+back
 document.addEventListener("visibilitychange",function(){if(document.hidden){if(timer){clearTimeout(timer);timer=null;}}else if(!timer){poll();}});
 function start(){
   if(!window.Desk){setTimeout(start,300);return;}
-  window.Desk.live=window.Desk.live||{positions:{},books:{},ok:false};
+  CORE=window.Desk.live||null; publish();
   if(typeof window.Desk.on==="function")window.Desk.on("update",function(){setTimeout(publish,0);});
   poll();
 }
