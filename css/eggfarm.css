@@ -1,0 +1,59 @@
+/* eggfarm.css : EGG FARM breakroom mini-game modal. A game only, nothing to do with money. */
+.ef-ov{position:fixed;inset:0;z-index:60;background:rgba(3,4,10,.86);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:12px}
+.ef-box{position:relative;width:min(1000px,100%);height:min(720px,100%);display:flex;flex-direction:column;gap:10px;padding:12px;box-sizing:border-box;border-radius:18px;overflow:hidden;
+ border:1px solid rgba(57,255,136,.4);box-shadow:0 0 40px rgba(57,255,136,.25),0 0 80px rgba(255,92,200,.15);
+ background:radial-gradient(120% 60% at 20% 0%,rgba(57,255,136,.16),transparent 60%),radial-gradient(90% 60% at 90% 10%,rgba(180,108,255,.2),transparent 60%),radial-gradient(80% 50% at 50% 100%,rgba(255,92,200,.12),transparent 60%),#05040c;color:#eef6f2;font-family:Inter,system-ui,sans-serif}
+.ef-top{display:flex;align-items:center;gap:10px}
+.ef-ttl{font:900 20px/1 Inter,sans-serif;letter-spacing:.06em;background:linear-gradient(90deg,#39ff88,#5cc8ff,#ff5cc8);-webkit-background-clip:text;background-clip:text;color:transparent;display:flex;flex-direction:column;gap:3px}
+.ef-ttl small{font:600 11px/1 Inter,sans-serif;letter-spacing:.04em;color:#8aa098;-webkit-text-fill-color:#8aa098}
+.ef-coins{margin-left:auto;display:flex;align-items:center;gap:6px;background:rgba(10,8,20,.8);border:1px solid #ffd84a66;border-radius:99px;padding:4px 12px 4px 4px;font-variant-numeric:tabular-nums}
+.ef-coins img{width:28px;height:28px;border-radius:50%;box-shadow:0 0 10px #ffd84a88}
+.ef-coins b{font:900 18px/1 Inter,sans-serif;color:#ffd84a}.ef-coins i{font-style:normal;font-size:11px;color:#8aa098}
+.ef-x{min-width:44px;min-height:44px;background:rgba(10,8,20,.8);border:1px solid rgba(180,108,255,.5);color:#eef6f2;border-radius:12px;font:700 16px/1 Inter,sans-serif;cursor:pointer}
+.ef-farm{position:relative;flex:1;min-height:0;border-radius:14px;border:1px dashed rgba(92,200,255,.3);overflow:hidden;touch-action:manipulation;
+ background:linear-gradient(180deg,rgba(92,200,255,.06),rgba(57,255,136,.08) 70%,rgba(57,255,136,.14)),radial-gradient(circle at 1px 1px,rgba(255,255,255,.08) 1px,transparent 1.5px) 0 0/14px 14px}
+.ef-hen,.ef-egg{position:absolute;transform:translate(-50%,-50%);background:none;border:0;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ef-hen{width:clamp(64px,13vmin,104px);height:clamp(64px,13vmin,104px);filter:drop-shadow(0 0 8px var(--c));animation:efbob 2.4s ease-in-out infinite}
+.ef-hen svg,.ef-egg svg{width:100%;height:100%;display:block;pointer-events:none}
+.ef-k3{animation:efbob 2.4s ease-in-out infinite,efhue 6s linear infinite}
+.ef-hen.ef-lay{animation:eflay .35s ease-out}.ef-hen.ef-poke{animation:efpoke .3s ease-out}
+.ef-egg{width:44px;height:48px;padding:5px 7px;box-sizing:border-box;animation:efin .35s cubic-bezier(.3,1.6,.5,1)}
+.ef-egg svg{filter:drop-shadow(0 0 6px currentColor)}.ef-t0{color:#eef6f2}.ef-t1{color:#ffd84a}.ef-t2{color:#5cc8ff}.ef-t3{color:#ff5cc8;animation:efin .35s cubic-bezier(.3,1.6,.5,1),efhue 3s linear infinite}
+.ef-egg.ef-got{animation:efgot .4s ease-in forwards;pointer-events:none}.ef-egg.ef-conv{animation:efconv .4s ease-in forwards;pointer-events:none}
+.ef-belt{position:absolute;left:0;right:0;bottom:0;height:12px;opacity:0;transition:opacity .4s;background:repeating-linear-gradient(90deg,#39ff8866 0 10px,transparent 10px 20px);background-size:20px 12px;border-top:1px solid #39ff8855}
+.ef-belt.on{opacity:1;animation:efbelt .6s linear infinite}
+.ef-bask{display:flex;align-items:center;gap:8px}
+.ef-bc{display:flex;gap:6px;flex:1;min-width:0}
+.ef-bc span{display:flex;align-items:center;gap:3px;background:rgba(10,8,20,.75);border:1px solid color-mix(in srgb,var(--c) 45%,transparent);border-radius:10px;padding:4px 8px;font:800 13px/1 Inter,sans-serif;color:var(--c);font-variant-numeric:tabular-nums}
+.ef-bc svg{width:14px;height:18px}
+.ef-sell{min-height:44px;min-width:96px;padding:0 16px;border-radius:12px;border:2px solid #ffd84a;background:rgba(255,216,74,.14);color:#ffd84a;font:900 14px/1 Inter,sans-serif;letter-spacing:.06em;cursor:pointer;box-shadow:0 0 14px #ffd84a44;white-space:nowrap}
+.ef-sell.ef-bump{animation:efbump .3s ease-out}
+.ef-shop{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ef-shop button{display:flex;align-items:center;gap:8px;min-height:52px;padding:6px 10px;border-radius:12px;border:1px solid rgba(92,200,255,.35);background:rgba(10,16,24,.85);color:#eef6f2;cursor:pointer;text-align:left;font-family:inherit;min-width:0;transition:transform .1s,border-color .2s}
+.ef-shop button:active{transform:scale(.96)}.ef-shop button:hover{border-color:#39ff88}
+.ef-shop button.ef-off{opacity:.55}.ef-shop button.ef-no{animation:efno .3s}
+.ef-ic{font-size:20px;flex:0 0 auto}.ef-t{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.ef-t b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ef-t em{font-style:normal;font-size:11px;color:#8aa098;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ef-p{font:900 13px/1 Inter,sans-serif;color:#ffd84a;white-space:nowrap}.ef-p:before{content:"●";color:#ffd84a;margin-right:3px;font-size:9px;vertical-align:2px}
+.ef-foot{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#8aa098}
+.ef-reset{min-height:44px;padding:0 14px;background:none;border:1px solid #ff5c6c66;color:#ff8fa0;border-radius:10px;font:700 12px/1 Inter,sans-serif;cursor:pointer}
+.ef-toast{position:absolute;left:50%;top:70px;transform:translate(-50%,-10px);max-width:88%;opacity:0;pointer-events:none;transition:.25s;background:rgba(10,8,20,.94);border:1px solid #39ff88;border-radius:12px;padding:10px 14px;font:700 13px/1.35 Inter,sans-serif;text-align:center;box-shadow:0 0 18px #39ff8844}
+.ef-toast.on{opacity:1;transform:translate(-50%,0)}
+.ef-pop{position:fixed;z-index:61;transform:translate(-50%,-50%);pointer-events:none;font:900 15px/1 Inter,sans-serif;text-shadow:0 0 10px currentColor;animation:efpop .9s ease-out forwards;white-space:nowrap}
+.ef-pop.big{font-size:22px}
+@keyframes efbob{50%{transform:translate(-50%,calc(-50% - 4px))}}
+@keyframes eflay{40%{transform:translate(-50%,-50%) scale(1.15,.85)}}
+@keyframes efpoke{40%{transform:translate(-50%,-50%) rotate(-10deg) scale(1.1)}}
+@keyframes efin{from{transform:translate(-50%,-90%) scale(.2);opacity:0}}
+@keyframes efgot{to{transform:translate(-50%,-160%) scale(1.4);opacity:0}}
+@keyframes efconv{to{transform:translate(120%,300%) scale(.5);opacity:0}}
+@keyframes efbelt{to{background-position:20px 0}}
+@keyframes efbump{50%{transform:scale(1.12)}}
+@keyframes efno{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@keyframes efpop{0%{transform:translate(-50%,-50%) scale(.6);opacity:0}20%{transform:translate(-50%,-80%) scale(1.15);opacity:1}100%{transform:translate(-50%,-260%) scale(1);opacity:0}}
+@keyframes efhue{to{filter:drop-shadow(0 0 8px var(--c)) hue-rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.ef-hen,.ef-belt.on,.ef-k3,.ef-t3{animation:none}}
+@media(max-width:600px){.ef-ov{padding:0}.ef-box{height:100%;border-radius:0;border:0;padding:10px 10px calc(10px + env(safe-area-inset-bottom));gap:8px}
+ .ef-ttl{font-size:17px}.ef-coins b{font-size:16px}.ef-shop{grid-template-columns:repeat(2,1fr);gap:6px}.ef-shop button{min-height:48px;padding:4px 8px;gap:6px}
+ .ef-bc{gap:4px}.ef-bc span{padding:4px 5px;font-size:12px}.ef-sell{min-width:84px;padding:0 10px}}
+@media(max-width:600px){.ef-ttl small{font-size:10px;white-space:nowrap}.ef-coins i{display:none}}
