@@ -61,11 +61,13 @@ function compute(d){
   if(sol)live.books.quanty.bank_usd=live.books.quanty.bank*sol;
   return live;
 }
+function esc(t){return String(t).replace(/[&<>"']/g,function(c){return "&#"+c.charCodeAt(0)+";";});}
 function fmtMC(v){if(!(v>0))return "";return "$"+(v>=1e9?(v/1e9).toFixed(2)+"B":v>=1e6?(v/1e6).toFixed(2)+"M":v>=1e3?Math.round(v/1e3)+"K":Math.round(v));}
 function fmtP(p){return p==null||!isFinite(p)?"--":(p>=0?"+":"")+p.toFixed(1)+"%";}
 var css=document.createElement("style");
 css.textContent=".lq-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#3fe07a;margin-right:4px;vertical-align:middle;animation:lqp 1.2s ease-in-out infinite}"+
 ".lq-dot.dl{background:#f5b342;animation:none}@keyframes lqp{0%,100%{opacity:1;box-shadow:0 0 0 0 #3fe07a99}50%{opacity:.45;box-shadow:0 0 0 4px #3fe07a00}}"+
+"a.cl-coin{color:inherit;text-decoration:none;cursor:pointer;border-radius:4px;padding:0 3px;-webkit-tap-highlight-color:#5ad1ff44;touch-action:manipulation}a.cl-coin:hover,a.cl-coin:focus{background:#5ad1ff26;outline:1px solid #5ad1ff66;color:#fff}"+".bn-o{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}.bn-coin{font-size:12px;padding:2px 6px;border:1px solid #ffffff22;border-radius:6px}.bn-coin em{font-style:normal}"+
 ".lq-tag{font-size:9px;font-weight:800;letter-spacing:.05em;color:#3fe07a}.lq-tag.dl{color:#f5b342}";
 document.head.appendChild(css);
 function badge(delayed){return '<span class="lq-dot'+(delayed?' dl':'')+'"></span><span class="lq-tag'+(delayed?' dl':'')+'">'+(delayed?'DELAYED':'LIVE')+'</span>';}
@@ -84,8 +86,8 @@ function paint(L){
   if(q&&pn){pn.textContent=(q.pnl_sol>=0?"+":"")+q.pnl_sol.toFixed(4)+" ("+fmtP(q.pnl_pct)+")";pn.className=q.pnl_sol>=0?"up":"dn";}
   var tk=document.querySelector(".ticker"), s=document.getElementById("lq-strip");
   if(tk&&!s){s=document.createElement("span");s.id="lq-strip";tk.appendChild(s);}
-  if(s){var n=0,mcs=[];for(var m in L.positions){n++;var p=L.positions[m];if(p.book==="quanty")mcs.push((p.symbol||"?")+" "+(fmtMC(p.mc_usd)||"--")+" "+fmtP(p.pnl_pct));}
-    var dl=!L.ok||(q&&q.delayed); s.innerHTML=badge(dl)+" "+(mcs.length?mcs.slice(0,4).join(" · ")+(mcs.length>4?" +"+(mcs.length-4):""):"no open coins");}
+  if(s){var n=0,mcs=[];for(var m in L.positions){n++;var p=L.positions[m];if(B58.test(m))mcs.push('<a class="cl-coin" data-mint="'+m+'" href="https://dexscreener.com/solana/'+m+'" target="_blank" rel="noopener" title="Open on DexScreener">'+(p.book!=="quanty"?esc(p.book.charAt(0).toUpperCase())+":":"")+esc(p.symbol||"?")+" "+(fmtMC(p.mc_usd)||"--")+" "+fmtP(p.pnl_pct)+"</a>");}
+    var dl=!L.ok||(q&&q.delayed); s.innerHTML=badge(dl)+" "+(mcs.length?mcs.slice(0,8).join(" · ")+(mcs.length>8?" +"+(mcs.length-8):""):"no open coins");}
 }
 var CORE=null; /* index.html core keeps Desk.live.state / .lagSec (live-feed status); preserve them */
 function publish(){var d=D();if(!d)return;var L=compute(d);
