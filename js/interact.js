@@ -8,10 +8,11 @@ const O=Desk.office,B=Desk.brk,pick=a=>a[Math.random()*a.length|0],K=()=>O.mobil
 const TAP={ledger:['What. I am busy.','Do not poke the analyst.','Statistically, that was a poke.','I bill by the poke.'],
  twitter:['HI HI HI!!!','YOU FOUND ME!!!','POST THIS INTERACTION','WE ARE SO BACK'],
  designer:['Hi! Mind the padding.','Boop. Very tactile.','Love that tap target size.','Do you like the aurora?'],
+ launcher:['Tap confirmed. Hype levels rising!','Careful, that is the concept hand.','You have taste. I can tell.','Zero supply, fees only, full send on vibes.'],
  quanty:['Hi! Paper trades only.','Beep. Scanning the boards.','Quant hello!','Patience is a position.']};
-const PAT={ledger:['…fine. That is nice.','*grumbles happily*','Do not tell Twitter.'],twitter:['HEADPATS GO VIRAL!!!','10/10 WOULD PAT AGAIN'],designer:['Careful, the beret!','Aww. Pixel-perfect pat.'],quanty:['Beep boop :)','Affection logged.']};
-const DANCE={ledger:['*reluctant shuffle*','This is not a dance. It is a rebalance.'],twitter:['DANCE BREAK!!!','VIBES ONLY!!!'],designer:['Motion design!','Easing: cubic-bezier.'],quanty:['Robot dance mode.','Executing groove.']};
-const HEAD={quanty:62,ledger:62,twitter:48,designer:52};
+const PAT={ledger:['…fine. That is nice.','*grumbles happily*','Do not tell Twitter.'],twitter:['HEADPATS GO VIRAL!!!','10/10 WOULD PAT AGAIN'],designer:['Careful, the beret!','Aww. Pixel-perfect pat.'],quanty:['Beep boop :)','Affection logged.'],launcher:['Hood up, heart full.','Headpat noted in the concept log.']};
+const DANCE={ledger:['*reluctant shuffle*','This is not a dance. It is a rebalance.'],twitter:['DANCE BREAK!!!','VIBES ONLY!!!'],designer:['Motion design!','Easing: cubic-bezier.'],quanty:['Robot dance mode.','Executing groove.'],launcher:['LIFTOFF SHUFFLE!','Countdown dance: 3, 2, 1…']};
+const HEAD={quanty:62,ledger:62,twitter:48,designer:52,launcher:54};
 function officeAgents(){const A=B.agents(),out=[];['ledger','twitter','designer'].forEach(n=>{const a=A[n];if(a&&a.room!=='brk')out.push({a,n,x:a.x,y:a.y,hc:a.hc||HEAD[n],sw:a.sw||26})});
  if(Desk.quanty)out.push({a:A.quanty,n:'quanty',x:Desk.quanty.x,y:Desk.quanty.y,hc:62,sw:30,q:true});return out}
 function brkAgents(){const A=B.agents(),out=[];Object.keys(A).forEach(n=>{const a=A[n];if(a&&a.room==='brk'&&a.br)out.push({a,n,x:a.br.x,y:a.br.y,hc:a.hc||HEAD[n],sw:a.sw||26})});return out}
@@ -35,7 +36,9 @@ bind(O.canvas,'office',(x,y)=>O.toCanvas(x,y),officeAgents);bind(B.canvas,'brk',
 const CHATS=[['ledger','twitter','Your win rate is a vibe, not a number.','VIBES ARE A NUMBER IF YOU BELIEVE!!!'],['twitter','ledger','LEDGER SMILE FOR THE TIMELINE','No.'],
  ['designer','ledger','Can I make your calculator glow more?','Only if it improves accuracy.'],['twitter','designer','MAKE ME A BANNER!!!','Only if you stop using all caps.'],
  ['designer','twitter','New dock, thoughts?','IT SLAPS!!!'],['ledger','designer','Your palette has 4 colors. Small n.','It is called restraint.'],
- ['quanty','ledger','Fridge again?','Research. Snack-side research.'],['quanty','twitter','No financial advice, remember.','PAPER ONLY, I KNOW!!!']];
+ ['quanty','ledger','Fridge again?','Research. Snack-side research.'],['quanty','twitter','No financial advice, remember.','PAPER ONLY, I KNOW!!!'],
+ ['launcher','designer','Need a logo that reads at 32px.','Give me the name first.'],['twitter','launcher','IS THIS ONE THE ONE?!','Concepts only. Simulated. But the name slaps.'],
+ ['launcher','ledger','Rate this name 1 to 10.','I rate names 0. I rate data.'],['designer','launcher','Your hoodie is very on-brand.','The hoodie IS the brand.']];
 function chat(){const lists={office:officeAgents(),brk:brkAgents()};const room=Math.random()<.5?'office':'brk',L=lists[room];if(L.length<2)return;
  const ok=CHATS.filter(c=>L.some(e=>e.n===c[0])&&L.some(e=>e.n===c[1]));if(!ok.length)return;const c=pick(ok),A=L.find(e=>e.n===c[0]),Bb=L.find(e=>e.n===c[1]);
  if(!A.q&&A.a.state==='held')return;say(A,c[2],3000);setTimeout(()=>say(Bb,c[3],3000),2300)}
