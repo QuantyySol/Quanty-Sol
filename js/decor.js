@@ -32,7 +32,7 @@ O.addActor({id:'decor-office',y:-.7,draw(X,t0){const t=T(t0),W=O.width,H=O.heigh
  pool(X,m?W/2:W*.82,fy+H*.05,m?W*.4:W*.15,H*.05,'rgba(255,92,200,A)',.12);pool(X,m?W*.17:170,fy+H*.05,m?W*.2:150,H*.04,'rgba(92,200,255,A)',.10);
  const rg=X.createLinearGradient(0,fy,0,H);rg.addColorStop(0,'rgba(180,120,255,.10)');rg.addColorStop(1,'rgba(0,0,0,0)');X.fillStyle=rg;X.fillRect(0,fy,W,H-fy);
  X.fillStyle=tint();X.fillRect(0,0,W,H)}});
-O.addActor({id:'decor-signs',y:-.45,draw(X,t0){const t=T(t0),W=O.width,H=O.height;if(O.mobile){neon(X,'HODL HOURS',530,895,30,'#ff5cc8','#ffd84a',t)}else{neon(X,'HODL HOURS',W*.82,H*.5,50,'#ff5cc8','#ffd84a',t);candles(X,60,430,220,128,t)}}});
+O.addActor({id:'decor-signs',y:-.45,draw(X,t0){const t=T(t0),W=O.width,H=O.height;if(O.mobile){neon(X,'HODL HOURS',W*.5,H*.572,24,'#ff5cc8','#ffd84a',t)}else{neon(X,'HODL HOURS',W*.82,H*.5,50,'#ff5cc8','#ffd84a',t);candles(X,60,430,220,128,t)}}});
 /* ---------- BREAKROOM ---------- */
 function skyline(X,w,t){X.save();X.beginPath();X.rect(w.x,w.y,w.w,w.h);X.clip();
  [[.55,'#1a1033',.006,23],[.7,'#0d0820',.014,41]].forEach(([hgt,col,sp,seed])=>{const off=(t*sp)%200;X.fillStyle=col;let x=w.x-off;let i=0;
@@ -62,3 +62,6 @@ function brk(X,t0,g){const t=T(t0),{W,H,FT,m}=g;
  X.fillStyle=tint();X.fillRect(0,0,W,H)}
 function hook(){if(Desk.brk&&Desk.brk.layers){Desk.brk.layers.bg.push(brk);return}setTimeout(hook,200)}hook();
 })();
+
+/* dock fade hint: drop the right-edge fade once scrolled to the end */
+(function(){var d=document.getElementById('minis');if(!d)return;function f(){d.classList.toggle('dk-end',d.scrollLeft+d.clientWidth>=d.scrollWidth-4)}d.addEventListener('scroll',f,{passive:true});window.addEventListener('resize',f);setTimeout(f,1500)})();
