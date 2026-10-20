@@ -12,12 +12,15 @@ function list(){var d=Desk.data||{},b=d.books||{},lv=(Desk.live&&Desk.live.books
   var start=n(s.start_sol),bank=n(l.bank)!=null?n(l.bank):n(s.bank_sol);
   var pnl=n(l.pnl_sol)!=null?n(l.pnl_sol):(n(s.pnl_sol)!=null?n(s.pnl_sol):(bank!=null&&start!=null?bank-start:null));
   var pct=n(l.pnl_pct)!=null?n(l.pnl_pct):(pnl!=null&&start?pnl/start*100:null);
-  out.push({name:k,col:COL[k]||'#b48cff',start:start,bank:bank,pnl:pnl,pct:pct,live:n(l.bank)!=null&&!l.delayed})});
+  out.push({open:(s.open||[]),name:k,col:COL[k]||'#b48cff',start:start,bank:bank,pnl:pnl,pct:pct,live:n(l.bank)!=null&&!l.delayed})});
  return out}
 window.DeskBanks={list:list};
 function card(x){return '<div class="bn-c" style="--c:'+x.col+'"><div class="bn-n">'+E(x.name.toUpperCase())+'<span class="bn-pp">PAPER</span></div>'+
  '<div class="bn-r"><i>Start</i><b>'+f4(x.start)+' SOL</b></div><div class="bn-r"><i>Bank</i><b>'+f4(x.bank)+' SOL</b></div>'+
- '<div class="bn-r"><i>P&amp;L</i><b class="'+(x.pnl<0?'dn':'up')+'">'+sg(x.pnl,4)+' SOL ('+sg(x.pct,1)+'%)</b></div></div>'}
+ '<div class="bn-r"><i>P&amp;L</i><b class="'+(x.pnl<0?'dn':'up')+'">'+sg(x.pnl,4)+' SOL ('+sg(x.pct,1)+'%)</b></div>'+openList(x)+'</div>'}
+function openList(x){var lp=(Desk.live&&Desk.live.positions)||{},R=/^[1-9A-HJ-NP-Za-km-z]{32,44}$/;if(!x.open.length)return '<div class="bn-r"><i>Open</i><b>none</b></div>';
+ return '<div class="bn-o">'+x.open.map(function(o){var m=R.test(o.mint||'')?o.mint:null,p=lp[o.mint],pc=p&&p.book===x.name&&p.pnl_pct!=null?p.pnl_pct:o.pnl_pct,t=E(o.symbol||'?')+(pc!=null?' <em class="'+(pc<0?'dn':'up')+'">'+sg(+pc,1)+'%</em>':'');
+  return m?'<a class="cl-coin bn-coin" data-mint="'+m+'" href="https://dexscreener.com/solana/'+m+'" target="_blank" rel="noopener" title="Open on DexScreener">'+t+' ↗</a>':'<span class="bn-coin">'+t+'</span>'}).join('')+'</div>'}
 function render(){var L=list();if(!L.length)return;
  /* Stats page: separate bank per trader */
  var st=document.getElementById('stats');if(st){var box=document.getElementById('banks');
