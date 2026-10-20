@@ -32,3 +32,33 @@
  #kg .card .v{font-size:22px}
  #kup{font-size:11px}
 }
+
+/* ===== Stats / Strategy / About polish (all sizes). Type scale 11/13/15/18. ===== */
+#stats,#rules,#about{--pg-ic:#8fc4ff}
+#stats p.sub,#rules p.sub{font-size:15px;max-width:68ch}
+#stats p.sub:after,#rules p.sub:after{content:"Paper trading · not financial advice";display:inline-block;margin-left:8px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#05070a;background:linear-gradient(90deg,#39ff88,#4da3ff,#ff5cc8);border-radius:99px;padding:2px 9px;vertical-align:2px}
+/* section headings inside Stats */
+#stats .bn-h,#stats #bn-sgl{display:flex;align-items:center;gap:8px;font-size:13px;color:#dbe6f5;margin:22px 0 10px}
+#stats .bn-h:before{content:"";width:8px;height:8px;border-radius:2px;background:linear-gradient(135deg,#39ff88,#4da3ff);box-shadow:0 0 8px rgba(77,163,255,.6)}
+#stats #sg{margin-bottom:14px}
+#stats .card .k{font-size:11px}
+/* Strategy: icon rules list */
+#rules .card{padding:20px 22px}
+ul.rules{list-style:none;margin:0;padding:0;max-width:70ch}
+ul.rules li{position:relative;margin:0;padding:12px 0 12px 40px;font-size:15px;line-height:1.6;color:#e6eefa;border-bottom:1px solid rgba(150,190,255,.10)}
+ul.rules li:last-child{border-bottom:0}
+ul.rules li:before{content:"";position:absolute;left:0;top:12px;width:26px;height:26px;border-radius:8px;background:rgba(77,163,255,.14) center/16px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238fc4ff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z'/%3E%3Cpath d='M9 12l2 2 4-4'/%3E%3C/svg%3E");border:1px solid rgba(150,190,255,.25)}
+ul.rules li:nth-child(2):before{background-color:rgba(57,255,136,.14);border-color:rgba(57,255,136,.35)}
+ul.rules li:nth-child(3):before,ul.rules li:nth-child(4):before{background-color:rgba(255,92,122,.14);border-color:rgba(255,92,122,.35)}
+ul.rules li:nth-child(5):before{background-color:rgba(255,191,63,.14);border-color:rgba(255,191,63,.35)}
+/* About: readable long text + prominent paper banner */
+#about .card{padding:22px 24px}
+#about .card:before{content:"Paper trading · not financial advice";display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#05070a;background:linear-gradient(90deg,#39ff88,#4da3ff,#ff5cc8);border-radius:99px;padding:4px 12px;box-shadow:0 0 14px rgba(77,163,255,.35)}
+#about .card p{max-width:68ch;font-size:15px;line-height:1.7;color:#e6eefa;margin:0 0 12px}
+#about .card p:last-child{margin-bottom:0;padding:12px 14px;border-left:3px solid #ff5cc8;background:rgba(255,92,200,.07);border-radius:0 10px 10px 0}
+@media(max-width:600px){
+ #stats p.sub:after,#rules p.sub:after{display:table;margin:8px 0 0}
+ #rules .card,#about .card{padding:16px}
+ ul.rules li{padding:10px 0 10px 36px;font-size:15px}ul.rules li:before{top:11px;width:24px;height:24px;background-size:14px}
+ #stats .bn-h,#stats #bn-sgl{font-size:13px;margin:18px 0 8px}
+}
