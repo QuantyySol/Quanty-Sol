@@ -134,8 +134,11 @@ const inArc=p=>{const r=arcRect();return p.x>r.x&&p.x<r.x+r.w&&p.y>r.y&&p.y<r.y+
 B.canvas.addEventListener('pointermove',e=>{const h=inArc(B.toCanvas(e.clientX,e.clientY));if(h!==hover){hover=h;B.canvas.style.cursor=h?'pointer':''}});
 B.canvas.addEventListener('pointerdown',e=>{if(B.view()!=='brk')return;const p=B.toCanvas(e.clientX,e.clientY);if(inArc(p)&&!B.hit(p)){e.stopImmediatePropagation();e.preventDefault();open()}},true);
 B.layers.bg.push((X2,t)=>{const r=arcRect(),pulse=.6+.4*Math.sin(t/300),s=hover?1.15:1,fs=Math.round((O2()?22:18)*s);X2.font='900 '+fs+'px Inter,sans-serif';X2.textAlign='center';
- const tw=X2.measureText('▶ PLAY').width+20,x=r.x+r.w/2,y=r.y-14;X2.fillStyle='rgba(10,8,20,.85)';X2.beginPath();X2.roundRect(x-tw/2,y-fs-6,tw,fs+12,10);X2.fill();X2.strokeStyle='#ffd84a';X2.lineWidth=2;X2.stroke();
+ const tw=X2.measureText('▶ PLAY').width+20,x=r.x+r.w/2,y=O2()?r.y+r.h-14:r.y-14;/* mobile: sign sits on the cabinet base so it clears the TOP 5 board */X2.fillStyle='rgba(10,8,20,.85)';X2.beginPath();X2.roundRect(x-tw/2,y-fs-6,tw,fs+12,10);X2.fill();X2.strokeStyle='#ffd84a';X2.lineWidth=2;X2.stroke();
  X2.globalAlpha=hover?1:pulse;X2.fillStyle='#ffd84a';X2.shadowColor='#ffd84a';X2.shadowBlur=12;X2.fillText('▶ PLAY',x,y);X2.shadowBlur=0;X2.globalAlpha=1;X2.textAlign='left'});
 const O2=()=>Desk.office&&Desk.office.mobile;
 window.DeskArcade={open,close};
 })();
+
+/* load the EGG FARM mini-game module (kept separate) */
+(function(){if(document.querySelector('script[src^="js/eggfarm.js"]'))return;const l=document.createElement('link');l.rel='stylesheet';l.href='css/eggfarm.css';document.head.appendChild(l);const s=document.createElement('script');s.src='js/eggfarm.js';s.defer=true;document.head.appendChild(s)})();
