@@ -1,0 +1,6 @@
+/* devroom.css : Dev Room canvas (slides in over the breakroom) + Launcher accents. View only. */
+.stage canvas.brk.dev{z-index:8;cursor:grab}
+.brk-tabs button[data-v="dev"].on{box-shadow:0 0 10px #ff5a1f88;color:#ffd2b8}
+.brk-fol button[data-f="launcher"]{font-size:12px;line-height:1}
+@media(max-width:760px){.brk-tabs button{padding-left:8px;padding-right:8px}}
+.brk-tabs button{white-space:nowrap}
