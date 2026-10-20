@@ -4,3 +4,12 @@
 .brk-fol button[data-f="launcher"]{font-size:12px;line-height:1}
 @media(max-width:760px){.brk-tabs button{padding-left:8px;padding-right:8px}}
 .brk-tabs button{white-space:nowrap}
+/* active room state */
+.brk-tabs button.on{color:#fff;background:#2a2238;box-shadow:inset 0 0 0 2px #b46cff}
+.brk-tabs button[data-v="dev"].on{background:#3a1606;box-shadow:inset 0 0 0 2px #ff5a1f,0 0 12px #ff5a1f88}
+.brk-tabs button[data-v="office"].on{box-shadow:inset 0 0 0 2px #39ff88}
+header nav a .rm-sub{font-weight:800;color:#ffd0b8}
+header nav a .rm-sub[data-v="brk"]{color:#e0c8ff}
+/* 44px tap targets on touch sizes */
+@media(max-width:760px){.brk-tabs button,.brk-fol button{min-height:44px;min-width:44px;font-size:14px}.brk-fol span{font-size:12px}.brk-fol button{display:inline-flex;align-items:center;justify-content:center}}
+@media(max-width:760px){.brk-fol{align-items:center}.brk-fol span{align-self:center}}
