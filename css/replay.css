@@ -1,0 +1,46 @@
+/* replay.css : "Desk Replay" timelapse card on Stats (paper trading). */
+#replay{margin-top:12px}
+.rp-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.rp-sub{color:var(--mut);font-size:13px;margin:4px 0 10px;max-width:620px}
+.rp-ctl{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+#replay .rp-ctl button{background:transparent;color:#8aa098;border:1px solid var(--line);border-radius:99px;font:inherit;font-size:12px;font-weight:700;padding:0 12px;min-height:36px;cursor:pointer}
+#replay .rp-ctl .rp-play{color:#0a0f11;background:#39ff88;border-color:#39ff88;min-width:92px}
+#replay .rp-sp{display:flex;gap:4px}
+#replay .rp-sp button.on{color:#eef6f2;border-color:#5d6f69;background:rgba(255,255,255,.06)}
+.rp-plot{background:#0a0f11;border:1px solid var(--line);border-radius:12px;padding:6px 4px 0}
+.rp-svg{display:block;max-width:100%;height:auto;margin:0 auto}
+.rp-g{stroke:#1c272b;stroke-width:1}
+.rp-t{fill:#8aa098;font-size:11px;font-family:inherit}
+.rp-st{stroke:var(--c);stroke-opacity:.25;stroke-width:1;stroke-dasharray:3 5}
+.rp-gh{fill:none;stroke:var(--c);stroke-opacity:.14;stroke-width:2}
+.rp-ln{fill:none;stroke:var(--c);stroke-width:2.4;stroke-linejoin:round;filter:drop-shadow(0 0 3px color-mix(in srgb,var(--c) 55%,transparent))}
+.rp-re{stroke-dasharray:5 4}
+.rp-ph{stroke:#eef6f2;stroke-opacity:.55;stroke-width:1;stroke-dasharray:2 3}
+.rp-mk{cursor:pointer;opacity:.16;transition:opacity .2s}
+.rp-mk circle{fill:#0a0f11;stroke:var(--c);stroke-width:2}
+.rp-mk.rp-win circle{fill:#39ff88}.rp-mk.rp-loss circle{fill:#ff5c6c}
+.rp-mk.on{opacity:1}
+.rp-mk.pop circle{animation:rpPop .6s ease-out}
+@keyframes rpPop{0%{r:2}45%{r:11}100%{}}
+.rp-sl{width:100%;margin:10px 0 4px;accent-color:#39ff88;min-height:28px}
+.rp-bar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;align-items:center}
+.rp-time{font-weight:800;color:#eef6f2;font-variant-numeric:tabular-nums}
+.rp-banks{display:flex;gap:12px;flex-wrap:wrap}
+.rp-bank{display:inline-flex;align-items:center;gap:5px;color:#c9d6d1;font-variant-numeric:tabular-nums}
+.rp-bank i{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.rp-cap{margin:10px 0 6px;font-size:14px;min-height:20px}
+.rp-feed{display:flex;flex-direction:column;gap:5px}
+.rp-chip{border-left:3px solid var(--c);background:rgba(255,255,255,.03);border-radius:8px;padding:6px 10px;font-size:13px}
+.rp-chip.new{animation:rpIn .45s ease-out}
+@keyframes rpIn{from{transform:translateX(-10px);opacity:0;background:color-mix(in srgb,var(--c) 22%,transparent)}to{}}
+.rp-ct{color:#8aa098;font-variant-numeric:tabular-nums;margin-right:8px}
+.rp-hint{color:#8aa098;font-size:13px}
+.rp-ft{color:#6f857d;font-size:12px;margin:10px 0 0}
+#replay .up{color:#39ff88}#replay .dn{color:#ff5c6c}
+@media(max-width:600px){
+ .rp-ctl{width:100%}
+ #replay .rp-ctl button{flex:1 1 auto;padding:0 8px}
+ .rp-bar{flex-direction:column;align-items:flex-start;gap:4px}
+ .rp-banks{gap:8px 12px}
+}
+@media(prefers-reduced-motion:reduce){.rp-mk.pop circle,.rp-chip.new{animation:none}}
