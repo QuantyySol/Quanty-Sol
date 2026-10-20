@@ -50,7 +50,7 @@ a.mon{cursor:pointer}a.mon:hover{border-color:#39ff88;box-shadow:0 0 22px rgba(5
 .mwslot{position:absolute;left:2%;top:5%;width:32%;height:44%;z-index:2;overflow:hidden}@media(max-width:760px){.stage .mwslot{left:3%;top:50.5%;width:94%;height:12.5%;overflow-x:auto}}
 </style></head><body>
 <header><div class="bar"><div class="brand"><img src="assets/robot_head.png" alt="">Uncle Quanty, PhD<span class="long">&nbsp;— <span>Paper Trading Desk</span></span></div><span class="paper">PAPER · NOT FINANCIAL ADVICE</span>
-<nav><a href="#office">Office</a><a href="#positions">Positions</a><a href="#history">History</a><a href="#stats">Stats</a><a href="#kol">KOL Watch</a><a href="#rules">Strategy</a><a href="#graveyard">Graveyard</a><a href="#about">About</a></nav></div></header>
+<nav><a href="#office">Office</a><a href="#trending">🔥 Trending</a><a href="#positions">Positions</a><a href="#history">History</a><a href="#stats">Stats</a><a href="#kol">KOL Watch</a><a href="#rules">Strategy</a><a href="#graveyard">Graveyard</a><a href="#about">About</a></nav></div></header>
 <div id="minis"></div><div id="mbub"></div>
 <main>
 <section id="office"><div class="stage" id="stage"><canvas id="oc"></canvas>
@@ -62,7 +62,7 @@ a.mon{cursor:pointer}a.mon:hover{border-color:#39ff88;box-shadow:0 0 22px rgba(5
 <section id="stats"><h2>Performance</h2><p class="sub">Starting bank: 1 SOL of pretend money.</p><div class="grid" id="sg"></div><div class="card" style="margin-top:12px"><div class="k">Bank over time (SOL)</div><svg class="chart" id="ch" viewBox="0 0 100 40" preserveAspectRatio="none"></svg></div></section>
 <section id="kol"><h2>KOL Watch</h2><p class="sub">Hunting for public traders worth following.</p><div class="card"><p><b>Bar to qualify:</b> <span id="kbar">70%+ win rate with an average hold time of at least 2 hours</span></p><p><b>Status:</b> <span id="kst">no trader has cleared the bar yet, so the desk trades on its own signals and does not copy anyone.</span></p><div class="grid" id="kg" style="margin:14px 0"></div><p class="k" id="kup">Checked regularly · nothing here is a recommendation</p></div></section>
 <section id="rules"><h2>Strategy</h2><p class="sub">The rules the desk follows on every trade.</p><div class="card"><ul class="rules" id="rl"></ul></div></section>
-<section id="graveyard"><h2>Bag Graveyard</h2><p class="sub">Every losing paper trade gets a headstone. Pretend money, real lessons. Tap a stone for its chart.</p><div class="gy-top"><div class="card gy-sumc"><div class="k">Groundskeeper's log</div><p id="gy-sum" style="margin:6px 0 0">Digging…</p></div><div class="card" id="gy-trophy"></div></div><div class="gy-yard"><div id="gy-plots"></div></div></section>
+<section id="trending"><h2>🔥 Trending</h2><p class="sub">Live mirror of the pump.fun app Trending list. Tap a coin for its DexScreener chart. Not advice: we only paper trade.</p></section><section id="graveyard"><h2>Bag Graveyard</h2><p class="sub">Every losing paper trade gets a headstone. Pretend money, real lessons. Tap a stone for its chart.</p><div class="gy-top"><div class="card gy-sumc"><div class="k">Groundskeeper's log</div><p id="gy-sum" style="margin:6px 0 0">Digging…</p></div><div class="card" id="gy-trophy"></div></div><div class="gy-yard"><div id="gy-plots"></div></div></section>
 <section id="about"><h2>About</h2><div class="card"><p>Uncle Quanty is an automated bot running a <b>paper</b> memecoin desk. It scans trending coins, runs safety checks to skip likely rugs, and simulates buys and sells with a fake 1 SOL bank.</p><p>No real money is traded. Nothing here is financial advice or a suggestion to buy or sell anything. Data refreshes automatically, usually within a few minutes.</p></div></section>
 </main><footer>Paper trading only · not financial advice</footer>
 <script>
@@ -283,4 +283,5 @@ route();load();requestAnimationFrame(loop);setTimeout(()=>Bot.say('Welcome to th
 <link rel="stylesheet" href="css/vsclean.css"><script src="js/vsclean.js" defer></script>
 <link rel="stylesheet" href="css/pages.css"><script src="js/pages.js" defer></script>
 <link rel="stylesheet" href="css/graveyard.css"><script src="js/graveyard.js" defer></script>
+<script src="js/trending.js" defer></script>
 </body></html>
