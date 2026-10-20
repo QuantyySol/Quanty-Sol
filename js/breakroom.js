@@ -98,7 +98,7 @@ function room(X,t){const g=geo(),{W,H,FT}=g;
  X.fillStyle='#2a2238';X.fillRect(w.x+w.w/2-3,w.y,6,w.h);
  // door back to office
  const d=g.door,dy=FT-d.h;R(X,d.x-6,dy-6,d.w+12,d.h+6,6,'#2a2238');X.fillStyle='#070a10';X.fillRect(d.x,dy,d.w,d.h);X.strokeStyle='#39ff88';X.lineWidth=2;X.shadowColor='#39ff88';X.shadowBlur=12;X.strokeRect(d.x+4,dy+4,d.w-8,d.h-4);X.shadowBlur=0;
- X.fillStyle='#39ff88';X.font='800 '+(g.m?13:18)+'px Inter,sans-serif';if(g.m){X.textAlign='left';X.fillText('← OFFICE',Math.max(6,d.x+4),dy+24)}else{X.textAlign='center';X.fillText('← OFFICE',d.x+d.w/2,dy-14)}X.textAlign='left';
+ X.fillStyle='#39ff88';X.font='800 '+(g.m?12:18)+'px Inter,sans-serif';if(g.m){X.textAlign='center';X.fillText('← OFFICE',d.x+d.w/2,dy+24)}else{X.textAlign='center';X.fillText('← OFFICE',d.x+d.w/2,dy-14)}X.textAlign='left';
  // fridge
  const f=g.fridge,fy=FT-f.h,open=Desk.brk&&Object.values(AG()).some(a=>a&&a.room==='brk'&&a.br&&a.br.act==='fridge'&&a.br.arrived);
  R(X,f.x,fy,f.w,f.h,8,'#dfe7ea');X.fillStyle='#b9c6cb';X.fillRect(f.x,fy+f.h*.38,f.w,3);R(X,f.x+f.w-12,fy+14,5,f.h*.18,2,'#8a9aa0');R(X,f.x+f.w-12,fy+f.h*.48,5,f.h*.22,2,'#8a9aa0');
