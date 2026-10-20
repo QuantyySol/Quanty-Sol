@@ -59,7 +59,7 @@ const quanty={id:'quanty',col:COL.quanty,hc:58,sw:30,face:1,state:'idle',
   X.save();X.beginPath();X.arc(0,-108,24,0,7);X.clip();if(qhead.complete&&qhead.naturalWidth)X.drawImage(qhead,-24,-132,48,48);else{X.fillStyle='#0b1a12';X.fill()}X.restore();X.strokeStyle=this.col;X.lineWidth=2;X.shadowColor=this.col;X.shadowBlur=12;X.beginPath();X.arc(0,-108,24,0,7);X.stroke();X.shadowBlur=0;
   R(X,26,-74,14,16,3,'#cfe3ea');X.fillStyle='#fff6';X.fillRect(29,-82+Math.sin(t/200)*2,2,6)}};
 const L=()=>Desk.actors.find(a=>a.id==='ledger'),T=()=>Desk.actors.find(a=>a.id==='twitter');
-const AG=()=>({ledger:L(),twitter:T(),designer,quanty});
+const EXTRA={},VH=[];const AG=()=>Object.assign({ledger:L(),twitter:T(),designer,quanty},EXTRA);
 /* ---------- breakroom canvas ---------- */
 const cv=document.createElement('canvas');cv.className='brk';cv.setAttribute('aria-label','Breakroom');stage.appendChild(cv);const X=cv.getContext('2d');
 let view='office',follow=null;
@@ -150,11 +150,11 @@ O.addActor({id:'brk-door',y:-.4,draw(X,t){const f=O.floorBounds(),d=officeDoor()
  R(X,x-6,y-6,w+12,h+6,6,'#1f2b2e');X.fillStyle='#120c1e';X.fillRect(x,y,w,h);X.strokeStyle='#b46cff';X.lineWidth=2;X.shadowColor='#b46cff';X.shadowBlur=14;X.strokeRect(x+4,y+4,w-8,h-4);X.shadowBlur=0;
  X.fillStyle='#b46cff';X.font='800 '+(m?14:16)+'px Inter,sans-serif';X.textAlign='center';X.fillText('BREAKROOM',d.x,y-12);X.font='22px sans-serif';X.fillText('☕',d.x,y+h*.45+Math.sin(t/500)*3);X.textAlign='left'}});
 function enter(a,line){if(!a)return;if(a.state==='held')return;a.room='brk';a.toBrk=false;a.draggable=false;a.bubble=null;const s=spots();
- a.br=a.br||{};Object.assign(a.br,{x:s.door.x,y:s.door.y,vx:0,vy:0,held:false,arrived:false,stay:(a.id==='designer'?5400:3000)+Math.random()*3600,face:1});choose(a);if(line)show(a,line);
+ a.br=a.br||{};const sd=a.brDoor?a.brDoor():s.door;Object.assign(a.br,{x:sd.x,y:sd.y,vx:0,vy:0,held:false,arrived:false,stay:(a.id==='designer'?5400:3000)+Math.random()*3600,face:1});choose(a);if(line)show(a,line);
  if(follow===a.id)setView('brk')}
-function exit(a,rush){if(!a||a.room!=='brk')return;a.room=null;if(a.br)a.br.bub=null;if(a.id==='quanty')return;a.draggable=true;const d=officeDoor();a.x=d.x;a.y=a.fy=d.y;a.vy=0;a.state='idle';a.timer=60;
+function exit(a,rush){if(!a||a.room!=='brk')return;a.room=null;if(a.br)a.br.bub=null;if(a.onExit){a.onExit(rush);if(follow===a.id)setView(a.room||'office');return}if(a.id==='quanty')return;a.draggable=true;const d=officeDoor();a.x=d.x;a.y=a.fy=d.y;a.vy=0;a.state='idle';a.timer=60;
  if(rush){a.visit();a.rush=true}else a.wander&&a.wander();if(follow===a.id)setView('office')}
-function choose(a){const pref=a.id==='ledger'?['fridge','fridge','couchL','couchR','rug']:a.id==='twitter'?['arcade','arcade','beanL','beanR','rug']:a.id==='designer'?['beanR','rug','couchR','beanL']:['couchL','couchR'];
+function choose(a){const pref=a.brPref?a.brPref:a.id==='ledger'?['fridge','fridge','couchL','couchR','rug']:a.id==='twitter'?['arcade','arcade','beanL','beanR','rug']:a.id==='designer'?['beanR','rug','couchR','beanL']:['couchL','couchR'];
  const taken=Object.values(AG()).filter(o=>o&&o!==a&&o.room==='brk'&&o.br).map(o=>o.br.act);const opts=pref.filter(p=>!taken.includes(p));const act=opts.length?pick(opts):pick(ACTS),p=spots()[act];
  Object.assign(a.br,{act,tx:p.x+(Math.random()*30-15),ty:p.y,arrived:false,nap:false,timer:900+Math.random()*900})}
 function show(a,l){a.br=a.br||{};a.br.bub={t:l.text,mood:l.mood,to:l.reply_to?(byId[l.reply_to]||{}).agent:null,ttl:(6000+String(l.text).length*70)/16}}
@@ -169,20 +169,20 @@ function post(a){if(a.dance>0)a.dance--;
  if(a.toBrk){const d=officeDoor();if(a.state==='idle'&&Math.hypot(a.x-d.x,a.y-d.y)<40)enter(a,a.pending),a.pending=null;else if(a.state==='idle'||performance.now()-a.toBrkAt>14000){if(performance.now()-a.toBrkAt>14000){enter(a,a.pending);a.pending=null}else a.go(d.x,d.y)}}}
 const _ds=designer.step;designer.step=function(t){_ds.call(this,t);if(!this.room)post(this)};
 const _dd=designer.draw;designer.draw=function(X,t){if(this.dance>0&&!this.room){X.translate(this.x,this.y);X.rotate(Math.sin(this.dance/4)*.3);X.translate(-this.x,-this.y)}_dd.call(this,X,t)};
-function sendToBrk(a,line,rush){if(!a)return;if(a.id==='quanty'){if(a.room!=='brk')enter(a,line);else if(line)show(a,line);return}
+function sendToBrk(a,line,rush){if(!a)return;if(a.toBrkFn)return a.toBrkFn(line,rush);if(a.id==='quanty'){if(a.room!=='brk')enter(a,line);else if(line)show(a,line);return}
  if(a.room==='brk'){if(line)show(a,line);return}if(a.state==='held')return;a.toBrk=true;a.toBrkAt=performance.now();a.pending=line||null;a.rush=!!rush;const d=officeDoor();a.go(d.x,d.y);if(rush)a.rush=true;
  if(line&&a.say)a.say('brb, breakroom ☕',2200)}
 /* breakroom sim */
 function brStep(a,t){const b=a.br;if(!b)return;if(b.bub&&--b.bub.ttl<=0)b.bub=null;if(a.dance>0&&a.room==='brk')a.dance--;if(a.jump>0&&a.id==='quanty')a.jump--;
  if(b.held)return;
  if(b.drop){b.vy+=1.2;b.y+=b.vy;b.x+=b.vx;b.vx*=.96;const g=geo();if(b.x<30){b.x=30;b.vx=-b.vx*.6}if(b.x>g.W-30){b.x=g.W-30;b.vx=-b.vx*.6}if(b.y>=b.fy){b.y=b.fy;if(Math.abs(b.vy)>3)b.vy=-b.vy*.45;else{b.drop=false;b.vy=0;b.vx=0;
-  if(b.x<geo().door.x+geo().door.w+30&&a.id!=='quanty'){exit(a,false);return}choose(a)}}return}
- if(!b.arrived){const dx=b.tx-b.x,dy=b.ty-b.y,d=Math.hypot(dx,dy),sp=(a.id==='twitter'?3.2:a.id==='ledger'?1.1:1.8)*(O.mobile?.8:1)*(b.leaving?1.6:1);
+  if(b.x<geo().door.x+geo().door.w+30&&a.id!=='quanty'&&!a.onExit){exit(a,false);return}choose(a)}}return}
+ if(!b.arrived){const dx=b.tx-b.x,dy=b.ty-b.y,d=Math.hypot(dx,dy),sp=(a.brSpeed||(a.id==='twitter'?3.2:a.id==='ledger'?1.1:1.8))*(O.mobile?.8:1)*(b.leaving?1.6:1);
   if(d<sp){b.x=b.tx;b.y=b.ty;b.arrived=true;if(b.leaving){a.id==='quanty'?(a.room=null,b.bub=null):exit(a,false);return}
    b.nap=(b.act==='couchL'||b.act==='couchR')&&a.id!=='twitter'&&Math.random()<.5;
-   if(!b.bub&&Math.random()<.6)b.bub={t:pick(LINES[a.id][b.act]||LINES[a.id].any),ttl:200}}
+   if(!b.bub&&Math.random()<.6){const LL=LINES[a.id]||a.brLines||{any:['…']};b.bub={t:pick(LL[b.act]||LL.any),ttl:200}}}
   else{b.x+=dx/d*sp;b.y+=dy/d*sp;if(Math.abs(dx)>1)b.face=dx>=0?1:-1}return}
- if(--b.timer<=0){if(--b.stay<=0||(a.id==='quanty'&&Math.random()<.5)){const s=spots();Object.assign(b,{tx:s.door.x,ty:s.door.y,arrived:false,leaving:true})}else choose(a)}else b.stay--}
+ if(--b.timer<=0){if(--b.stay<=0||(a.id==='quanty'&&Math.random()<.5)){const s=spots(),sd=a.brDoor?a.brDoor():s.door;Object.assign(b,{tx:sd.x,ty:sd.y,arrived:false,leaving:true})}else choose(a)}else b.stay--}
 const LINES={ledger:{fridge:['*rummage* Who took my pretzels?','Snack audit in progress.','Fridge: 3 sodas, 0 alpha.'],any:['Sitting. Not resting. Thinking.','n is too small to nap.','This couch has poor liquidity.']},
  twitter:{arcade:['NEW HIGH SCORE LFG!!!','SPEEDRUNNING THE BREAKROOM','ARCADE ARC BEGINS'],any:['POSTING FROM THE BEANBAG','BREAK TIME BUT STILL BULLISH','GM FROM THE LOUNGE']},
  designer:{any:['Sketching a new icon.','This rug is very on-brand.','Mood board: aurora.','Adding 4px of breathing room.']},
@@ -216,9 +216,9 @@ cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
 /* ---------- view switching + follow ---------- */
 const nav=document.createElement('div');nav.className='brk-nav';nav.innerHTML='<div class="brk-tabs" role="tablist"><button data-v="office" role="tab">Office</button><button data-v="brk" role="tab">☕ Breakroom</button></div><div class="brk-fol" aria-label="Follow an agent"><span>Follow</span>'+
  ['quanty','ledger','twitter','designer'].map(n=>`<button data-f="${n}" style="--c:${COL[n]}" title="Follow ${LAB[n]}">${LAB[n][0]}</button>`).join('')+'</div>';stage.appendChild(nav);
-function setView(v){view=v;stage.classList.toggle('in-brk',v==='brk');cv.classList.toggle('show',v==='brk');nav.querySelectorAll('[data-v]').forEach(b=>{b.classList.toggle('on',b.dataset.v===v);b.setAttribute('aria-selected',b.dataset.v===v)})}
+function setView(v){view=v;stage.classList.toggle('in-brk',v!=='office');cv.classList.toggle('show',v==='brk');nav.querySelectorAll('[data-v]').forEach(b=>{b.classList.toggle('on',b.dataset.v===v);b.setAttribute('aria-selected',b.dataset.v===v)});VH.forEach(f=>{try{f(v)}catch(e){console.warn('view hook',e)}})}
 nav.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.v){follow=null;paintFol();setView(b.dataset.v)}else if(b.dataset.f){follow=follow===b.dataset.f?null:b.dataset.f;paintFol();
- const a=AG()[follow];if(a)setView(a.room==='brk'?'brk':'office');if(a&&follow&&a.id!=='quanty'&&a.room!=='brk'&&Math.random()<.5)sendToBrk(a,null)}});
+ const a=AG()[follow];if(a)setView(a.room==='brk'?'brk':a.room==='dev'?'dev':'office');if(a&&follow&&a.id!=='quanty'&&!a.onExit&&a.room!=='brk'&&Math.random()<.5)sendToBrk(a,null)}});
 function paintFol(){nav.querySelectorAll('[data-f]').forEach(b=>b.classList.toggle('on',b.dataset.f===follow))}
 setView('office');
 /* office door click opens the breakroom */
@@ -255,7 +255,7 @@ function dockCard(){const box=document.getElementById('minis'),bub=document.getE
 if(document.readyState==='complete')setTimeout(dockCard,0);else addEventListener('load',()=>setTimeout(dockCard,0));
 /* initial placement + API for interact.js */
 [L(),T()].forEach(wrapOffice);
-Desk.brk={canvas:cv,layers:LAY,geo,spots,agents:AG,view:()=>view,setView,enter,exit,sendToBrk,fx:addFx,hit:hitBrk,toCanvas:toC,
+Desk.brk={register(a,lab){EXTRA[a.id]=a;COL[a.id]=a.col;LAB[a.id]=lab||a.id.toUpperCase()},onView(f){VH.push(f)},nav,follow:()=>follow,col:COL,blob,dots,glow,R,K,wrap,canvas:cv,layers:LAY,geo,spots,agents:AG,view:()=>view,setView,enter,exit,sendToBrk,fx:addFx,hit:hitBrk,toCanvas:toC,
  pos(a){if(!a)return null;if(a.room==='brk'&&a.br)return{room:'brk',x:a.br.x,y:a.br.y};if(a.id==='quanty'){const q=Desk.quanty;return q?{room:'office',x:q.x,y:q.y}:null}return{room:'office',x:a.x,y:a.y}},
  say(a,t,ms){if(!a)return;if(a.room==='brk'&&a.br){a.br.bub={t,ttl:(ms||3000)/16}}else if(a.id==='quanty'){Desk.quanty&&Desk.quanty.say(t,ms||3000)}else a.say&&a.say(t,ms||3000)}};
 })();
