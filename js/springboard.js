@@ -11,9 +11,10 @@ const APPS=[
  {id:'tiltmaze',n:'Tilt Maze',ic:'🎱',c:['#d9a46b','#7a4a1c']},
  {id:'towers',n:'Tower Guard',ic:'🏰',c:['#9fb4ff','#3040a8']},
  {id:'bubblewrap',n:'Bubble Wrap',ic:'🫧',c:['#bff3ff','#3aa7c9']}];
+const APPS2=[{id:'gems',n:'Gems',ic:'💎',c:['#e7a6ff','#7a1ab8']},{id:'artillery',n:'Artillery',ic:'💣',c:['#c9b98a','#5d5230']},{id:'mines',n:'Mines',ic:'🚩',c:['#d0d8e0','#59677a']},{id:'marble',n:'Marble Run',ic:'🔮',c:['#9ef0ff','#1c6f9a']},{id:'airpuck',n:'Air Puck',ic:'🏒',c:['#ff9a9a','#b0202a']},{id:'settings',n:'Settings',ic:'⚙️',c:['#e0e4e8','#7d8794'],set:1}];
 const DOCK=[{id:'taptap',n:'Tap Beats',ic:'🎵',c:['#ff8ad8','#9a1a8a']},{id:'whack',n:'Whack',ic:'🔨',c:['#b5e07a','#4f8a1c']},{id:'bricks',n:'Bricks',ic:'🧱',c:['#ffb07a','#c8320a']},{id:'memory',n:'Memory',ic:'🃏',c:['#ffffff','#9aa6b8']}];
 const HI=id=>'uq_sb_hi_'+id,getHi=id=>{try{return +localStorage.getItem(HI(id))||0}catch(e){return 0}},setHi=(id,v)=>{try{localStorage.setItem(HI(id),v)}catch(e){}};
-const REG={},W=320,H=448;let sec,scr,lock,board,app,cv,g,ov,ttl,muteBtn,cur=null,curId=null,state='idle',raf=0,last=0,actx=null;
+const REG={},W=320,H=448;let drg=0,setp,sec,scr,lock,board,app,cv,g,ov,ttl,muteBtn,cur=null,curId=null,state='idle',raf=0,last=0,actx=null;
 let muted=(()=>{try{return localStorage.getItem('uq_sb_mute')==='1'}catch(e){return false}})();
 const held=new Set(),tilt={x:0,y:0,ok:false};
 function beep(f,d,type,vol){if(muted)return;try{actx=actx||new(window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume();const o=actx.createOscillator(),q=actx.createGain(),t=actx.currentTime;o.type=type||'square';o.frequency.setValueAtTime(f,t);q.gain.setValueAtTime(vol||.06,t);q.gain.exponentialRampToValueAtTime(.0001,t+(d||.1));o.connect(q);q.connect(actx.destination);o.start(t);o.stop(t+(d||.1)+.02)}catch(e){}}
@@ -23,20 +24,31 @@ const api={W,H,held,tilt,beep,slide,txt,get g(){return g},over(score){if(state!=
 window.SB={reg(id,fac){REG[id]=fac},api};
 const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e};
 function icon(a,dock){const b=el('button','sb-ic',`<span class="g" style="background:linear-gradient(${a.c[0]},${a.c[1]})">${a.ic}</span><span>${a.n}</span>`);b.type='button';b.setAttribute('aria-label',a.n);
- if(a.h)b.onclick=()=>{location.hash=a.h};else{b.dataset.app=a.id;b.onclick=()=>open(a)}return b}
+ if(a.h)b.onclick=()=>{location.hash=a.h};else{if(a.set)b.onclick=()=>{if(!drg)settings()};else{b.dataset.app=a.id;b.onclick=()=>{if(!drg)open(a)}}}return b}
 function badges(){sec.querySelectorAll('[data-app]').forEach(b=>{let d=b.querySelector('.bd');const v=getHi(b.dataset.app);if(!v){d&&d.remove();return}if(!d){d=el('span','bd');b.appendChild(d)}d.textContent=v>999?Math.round(v/1000)+'k':v})}
 function clock(){const n=new Date(),t=n.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}).replace(/\s?[AP]M/i,'');sec.querySelectorAll('.sb-t').forEach(e=>e.textContent=t);const d=sec.querySelector('.dt');if(d)d.textContent=n.toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'})}
 function build(){sec=document.getElementById('arcade');if(!sec)return false;
  sec.innerHTML='<h2>🕹️ Arcade</h2><p class="sub">Classic pocket games. Slide to unlock, tap an icon to play. Best scores stay on this device.</p>';
  const wrap=el('div','sb-wrap'),ph=el('div','sb-phone');scr=el('div','sb-screen');
  scr.appendChild(el('div','sb-status','<span>iArcade ▂▄▆</span><b class="sb-t"></b><span>100%<i class="bat"></i></span>'));
- board=el('div','sb-board');const grid=el('div','sb-grid');APPS.forEach(a=>grid.appendChild(icon(a)));board.appendChild(grid);board.appendChild(el('div','sb-dots','● ○'));const dk=el('div','sb-dock');DOCK.forEach(a=>dk.appendChild(icon(a,1)));board.appendChild(dk);scr.appendChild(board);
+ board=el('div','sb-board');const pages=el('div','sb-pages');[APPS,APPS2].forEach(L=>{const pg=el('div','sb-page'),grid=el('div','sb-grid');L.forEach(a=>grid.appendChild(icon(a)));pg.appendChild(grid);pages.appendChild(pg)});board.appendChild(pages);const dots=el('div','sb-dots','<span>●</span><span>○</span>');board.appendChild(dots);pager(pages,dots);const dk=el('div','sb-dock');DOCK.forEach(a=>dk.appendChild(icon(a,1)));board.appendChild(dk);scr.appendChild(board);
  lock=el('div','sb-lock','<div class="top"><div class="tm sb-t"></div><div class="dt"></div></div><div class="art">🌄</div><div class="bot"><div class="sb-track"><div class="sb-knob" role="button" tabindex="0" aria-label="Slide to unlock">➜</div><div class="lbl">slide to unlock</div></div></div>');scr.appendChild(lock);
- app=el('div','sb-app');const nav=el('div','sb-nav');const back=el('button','','◀ Home');back.onclick=home;ttl=el('span','','');muteBtn=el('button','',muted?'🔇':'🔊');muteBtn.onclick=()=>{muted=!muted;muteBtn.textContent=muted?'🔇':'🔊';try{localStorage.setItem('uq_sb_mute',muted?'1':'0')}catch(e){}};
- nav.append(back,ttl,muteBtn);cv=el('canvas','sb-cv');cv.width=W*2;cv.height=H*2;g=cv.getContext('2d');app.append(nav,cv);ov=el('div','sb-ov');ov.style.display='none';app.appendChild(ov);scr.appendChild(app);
- const hb=el('button','sb-home');hb.setAttribute('aria-label','Home button');hb.onclick=()=>{if(cur)home();else lockUp()};
+ app=el('div','sb-app');const nav=el('div','sb-nav');const back=el('button','','◀ Home');back.onclick=()=>home();ttl=el('span','','');muteBtn=el('button','',muted?'🔇':'🔊');muteBtn.onclick=()=>{muted=!muted;muteBtn.textContent=muted?'🔇':'🔊';try{localStorage.setItem('uq_sb_mute',muted?'1':'0')}catch(e){}};
+ nav.append(back,ttl,muteBtn);cv=el('canvas','sb-cv');cv.width=W*2;cv.height=H*2;g=cv.getContext('2d');setp=el('div','sb-set');app.append(nav,cv,setp);ov=el('div','sb-ov');ov.style.display='none';app.appendChild(ov);scr.appendChild(app);
+ const hb=el('button','sb-home');hb.setAttribute('aria-label','Home button');hb.onclick=()=>{if(cur_())home();else lockUp()};
  ph.append(scr,hb);wrap.appendChild(ph);wrap.appendChild(el('p','sb-note','Touch, mouse or arrows / space bar. Tilt games use your phone\'s motion sensor when allowed, with on-screen controls as backup.'));sec.appendChild(wrap);
  slider();ptr();clock();setInterval(clock,10000);badges();return true}
+function pager(p,d){const go=i=>p.scrollTo({left:i*p.clientWidth,behavior:'smooth'}),cur=()=>Math.round(p.scrollLeft/p.clientWidth);
+ p.addEventListener('scroll',()=>{const i=cur();d.querySelectorAll('span').forEach((s,k)=>s.textContent=k===i?'●':'○')});d.querySelectorAll('span').forEach((s,k)=>s.onclick=()=>go(k));
+ let sx=null;p.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse')return;sx=e.clientX;drg=0});addEventListener('pointerup',e=>{if(sx==null)return;const dx=e.clientX-sx;sx=null;if(Math.abs(dx)>40){drg=1;go(Math.max(0,Math.min(1,cur()-Math.sign(dx))));setTimeout(()=>drg=0,50)}});
+ sec.tabIndex=-1;addEventListener(KD,e=>{if(cur_()||!sec.classList.contains('on'))return;if(e[KF]==='ArrowRight')go(1);if(e[KF]==='ArrowLeft')go(0)})}
+const cur_=()=>cur||app.classList.contains('on');
+const NAMES=()=>[...APPS,...APPS2,...DOCK].filter(a=>!a.set);
+function settings(){unlock();ttl.textContent='Settings';app.classList.add('on');cv.style.display='none';ov.style.display='none';setp.style.display='block';
+ const rows=NAMES().map(a=>`<div class="row"><span>${a.ic} ${a.n}</span><b>${getHi(a.id)||'–'}</b></div>`).join('');
+ setp.innerHTML=`<h4>Sounds</h4><div class="grp"><div class="row"><span>Game sounds</span><button class="tog${muted?' off':''}" type="button">${muted?'OFF':'ON'}</button></div></div><h4>Best scores</h4><div class="grp">${rows}</div><div class="grp"><div class="row"><span>Reset all best scores</span><button class="rst" type="button">Reset</button></div></div>`;
+ setp.querySelector('.tog').onclick=()=>{muteBtn.onclick();settings()};
+ setp.querySelector('.rst').onclick=e=>{const b=e.target;if(b.dataset.c){NAMES().forEach(a=>{try{localStorage.removeItem(HI(a.id))}catch(_){}});badges();settings()}else{b.dataset.c=1;b.textContent='Tap again';setTimeout(()=>{if(b.isConnected){delete b.dataset.c;b.textContent='Reset'}},2500)}}}
 function lockUp(){lock.classList.remove('gone');const k=lock.querySelector('.sb-knob');k.style.left='3px'}
 function unlock(){lock.classList.add('gone');slide(300,900,.15,'sine')}
 function slider(){const k=lock.querySelector('.sb-knob'),tr=lock.querySelector('.sb-track'),lb=lock.querySelector('.lbl');let sx=null,max=0;
@@ -63,7 +75,7 @@ async function open(a){if(cur)return;unlock();curId=a.id;ttl.textContent=a.n;app
  try{await loadGame(a.id)}catch(e){txt('Could not load game',W/2,H/2+30,13,'#f88','center');return}
  if(curId!==a.id)return;cur=REG[a.id](api);cur.reset();state='ready';draw();showOv(a.ic+' '+a.n,(cur.help||'')+'<br>Best: '+getHi(a.id),'Tap to play');loop()}
 function start(){if(!cur)return;if(state==='paused'){state='play';ov.style.display='none';return}if(cur.needs&&cur.needs()===false)return;cur.reset();state='play';ov.style.display='none';beep(880,.06)}
-function home(){cancelAnimationFrame(raf);raf=0;cur&&cur.stop&&cur.stop();cur=null;curId=null;state='idle';app.classList.remove('on');held.clear();badges()}
+function home(){setp.style.display='none';cv.style.display='';cancelAnimationFrame(raf);raf=0;cur&&cur.stop&&cur.stop();cur=null;curId=null;state='idle';app.classList.remove('on');held.clear();badges()}
 function draw(){g.setTransform(2,0,0,2,0,0);g.save();cur.draw(g);g.restore()}
 function loop(){cancelAnimationFrame(raf);last=performance.now();const f=t=>{if(!cur)return;const dt=Math.min(.05,(t-last)/1000);last=t;if(state==='play')cur.update(dt);if(state!=='idle')draw();raf=requestAnimationFrame(f)};raf=requestAnimationFrame(f)}
 function hook(){const h=location.hash.slice(1);if(h!=='arcade'&&cur&&state==='play')pause()}
