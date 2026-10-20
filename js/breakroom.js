@@ -98,7 +98,7 @@ function room(X,t){const g=geo(),{W,H,FT}=g;
  X.fillStyle='#2a2238';X.fillRect(w.x+w.w/2-3,w.y,6,w.h);
  // door back to office
  const d=g.door,dy=FT-d.h;R(X,d.x-6,dy-6,d.w+12,d.h+6,6,'#2a2238');X.fillStyle='#070a10';X.fillRect(d.x,dy,d.w,d.h);X.strokeStyle='#39ff88';X.lineWidth=2;X.shadowColor='#39ff88';X.shadowBlur=12;X.strokeRect(d.x+4,dy+4,d.w-8,d.h-4);X.shadowBlur=0;
- X.fillStyle='#39ff88';X.font='800 '+(g.m?16:18)+'px Inter,sans-serif';X.textAlign='center';X.fillText('← OFFICE',d.x+d.w/2,dy-14);X.textAlign='left';
+ X.fillStyle='#39ff88';X.font='800 '+(g.m?16:18)+'px Inter,sans-serif';if(g.m){X.textAlign='left';X.fillText('← OFFICE',Math.max(6,d.x-2),dy-14)}else{X.textAlign='center';X.fillText('← OFFICE',d.x+d.w/2,dy-14)}X.textAlign='left';
  // fridge
  const f=g.fridge,fy=FT-f.h,open=Desk.brk&&Object.values(AG()).some(a=>a&&a.room==='brk'&&a.br&&a.br.act==='fridge'&&a.br.arrived);
  R(X,f.x,fy,f.w,f.h,8,'#dfe7ea');X.fillStyle='#b9c6cb';X.fillRect(f.x,fy+f.h*.38,f.w,3);R(X,f.x+f.w-12,fy+14,5,f.h*.18,2,'#8a9aa0');R(X,f.x+f.w-12,fy+f.h*.48,5,f.h*.22,2,'#8a9aa0');
@@ -124,10 +124,13 @@ function room(X,t){const g=geo(),{W,H,FT}=g;
  [[W*(g.m?.95:.975),FT+H*.1],[W*(g.m?.36:.24),FT+2]].forEach(([px,py],j)=>{R(X,px-22,py-34,44,36,6,'#5a3b2a');for(let i=0;i<5;i++){X.fillStyle=i%2?'#2fbf6a':'#39ff88';X.beginPath();X.ellipse(px+Math.sin(t/800+i+j)*3+(i-2)*9,py-50-i%3*12,8,22,(i-2)*.35,0,7);X.fill()}})}
 /* TOP 5 DAYS board (pooled agent-days, best first; from DeskBooks so numbers match the VS board) */
 function board(X,b,t){R(X,b.x-6,b.y-6,b.w+12,b.h+12,10,'#2a2238');R(X,b.x,b.y,b.w,b.h,8,'#070d10');const m=O.mobile,fs=Math.round(b.h/(m?11:12)),pad=b.w*.05;
- X.fillStyle='#ffd84a';X.font='900 '+fs+'px Inter,sans-serif';X.fillText('TOP 5 DAYS',b.x+pad,b.y+fs*1.4);X.fillStyle='#8aa098';X.font='600 '+Math.round(fs*.55)+'px Inter,sans-serif';X.fillText('realized P&L by day · traders only · paper',b.x+pad,b.y+fs*2.15);
+ X.fillStyle='#ffd84a';X.font='900 '+fs+'px Inter,sans-serif';X.fillText('TOP 5 DAYS',b.x+pad,b.y+fs*1.4);X.fillStyle='#c9d6d0';X.font='600 '+Math.round(fs*.55)+'px Inter,sans-serif';X.fillText('realized P&L by day · traders only · paper',b.x+pad,b.y+fs*2.15);
  let rows=[];try{rows=window.DeskBooks?DeskBooks.topDays(5):[]}catch(e){}
  const rh=(b.h-fs*2.7)/(m?5.05:5.2),medal=['#ffd84a','#c8d3dc','#d08a4a'];
  if(!rows.length){X.fillStyle='#8aa098';X.font='600 '+Math.round(fs*.7)+'px Inter,sans-serif';X.fillText('No closed days yet.',b.x+pad,b.y+fs*3.6)}
+ if(m){rows.forEach((r,i)=>{const y=b.y+fs*2.7+rh*i+rh*.1,c=COL[r.name]||'#cfe',my=y+rh*.62;if(i<3){X.fillStyle=medal[i]+'22';X.fillRect(b.x+4,y,b.w-8,rh*.9)}
+  X.font='900 24px Inter,sans-serif';X.fillStyle=i<3?medal[i]:'#c9d6d0';X.fillText(String(i+1),b.x+pad,my);X.fillStyle=c;X.fillText(LAB[r.name],b.x+pad+34,my,b.w*.32);X.fillStyle='#c9d6d0';X.font='700 23px Inter,sans-serif';X.fillText(r.date.slice(5),b.x+pad+34+b.w*.33,my);
+  X.textAlign='right';X.fillStyle=r.pnl>=0?'#39ff88':'#ff7a8a';X.font='800 24px Inter,sans-serif';X.fillText((r.pnl>=0?'+':'')+r.pnl.toFixed(3)+' ('+(r.pct>=0?'+':'')+r.pct.toFixed(1)+'%)',b.x+b.w-pad,my,b.w*.42);X.textAlign='left'});return}
  rows.forEach((r,i)=>{const y=b.y+fs*2.7+rh*i+rh*.15,c=COL[r.name]||'#cfe';if(i<3){X.fillStyle=medal[i]+'22';X.fillRect(b.x+4,y,b.w-8,rh*.88)}
   X.fillStyle=i<3?medal[i]:'#8aa098';X.font='900 '+Math.round(rh*.5)+'px Inter,sans-serif';X.fillText(String(i+1),b.x+pad,y+rh*.62);
   X.fillStyle=c;X.beginPath();X.arc(b.x+pad+rh*.75,y+rh*.44,rh*.24,0,7);X.fill();X.fillStyle='#0b0f12';X.fillRect(b.x+pad+rh*.65,y+rh*.38,rh*.06,rh*.08);X.fillRect(b.x+pad+rh*.8,y+rh*.38,rh*.06,rh*.08);
@@ -198,7 +201,7 @@ function brDraw(t){const g=geo();if(cv.width!==g.W||cv.height!==g.H){cv.width=g.
   if(b.arrived&&b.act==='arcade'&&(t/250|0)%2){X.fillStyle='#ffd84a';X.font='800 14px Inter,sans-serif';X.fillText('★',b.x-10,y-a.hc*2.3*k)}
   if(b.arrived&&b.act==='fridge'&&a.id==='ledger'){X.fillStyle='#ff9f1a';X.fillRect(b.x-50*k,y-90*k+Math.sin(t/140)*4,14,18)}});
  drawFx(X,'brk');list.forEach((a,i)=>{const b=a.br;comic(X,a,b.x,b.y-(a.hc*2+16)*K(),t,i)});
- X.fillStyle='rgba(5,7,10,.55)';X.fillRect(0,g.H-28,g.W,28);X.fillStyle='#8aa098';X.font='600 14px Inter,sans-serif';X.textAlign='center';X.fillText('Breakroom · paper trading desk · nothing here is financial advice',g.W/2,g.H-9);X.textAlign='left'}
+ X.fillStyle='rgba(5,7,10,.85)';X.fillRect(0,g.H-(g.m?40:28),g.W,g.m?40:28);X.fillStyle='#e3ece8';X.font='600 14px Inter,sans-serif';X.textAlign='center';X.fillText(g.m?'Breakroom · paper only · not advice':'Breakroom · paper trading desk · nothing here is financial advice',g.W/2,g.H-9);X.textAlign='left'}
 (function loop(t){try{Object.values(AG()).forEach(a=>{if(a&&a.room==='brk')brStep(a,t)});if(view==='brk')brDraw(t)}catch(e){console.warn('breakroom',e)}requestAnimationFrame(loop)})(0);
 /* breakroom drag + toss */
 const toC=(cx,cy)=>{const r=cv.getBoundingClientRect();return{x:(cx-r.left)/r.width*cv.width,y:(cy-r.top)/r.height*cv.height}};
