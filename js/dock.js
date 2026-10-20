@@ -8,7 +8,8 @@ const info={
  QUANTY(){return bk('quanty')},
  LEDGER(){return bk('ledger')},
  TWITTER(){return bk('twitter')},
- DESIGNER(){return 'designer · ships UI'}};
+ DESIGNER(){return 'designer · ships UI'},
+ LAUNCHER(){return 'launcher · concepts'}};
 function paint(){document.querySelectorAll('#minis .mini').forEach(m=>{const nm=m.querySelector('.nm');if(!nm)return;let w=m.querySelector('.dk-t');
  if(!w){w=document.createElement('div');w.className='dk-t';nm.after(w);w.appendChild(nm);const i=document.createElement('div');i.className='dk-i';w.appendChild(i)}
  const f=info[(m.getAttribute('aria-label')||nm.textContent||'').toUpperCase()];if(f){try{w.querySelector('.dk-i').innerHTML=f()}catch(e){}}})}
