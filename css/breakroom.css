@@ -16,3 +16,15 @@
 @media(max-width:760px){.brk-nav{top:30%;gap:4px}.brk-tabs button{padding:6px 10px;font-size:12px}.brk-fol button{padding:5px 8px}
  .brlog{left:3%;right:3%;width:auto;bottom:3%}}
 @media(max-width:760px){.stage.in-brk .brk-nav{top:1.2%}}
+/* mobile breakroom: tabs stay on top, FOLLOW row drops to the bottom-right beside the chat bar so the aurora window is clear */
+@media(max-width:600px){
+ .stage.in-brk .brk-nav{left:0;right:0;top:1.2%;bottom:3%;transform:none;flex-direction:column;flex-wrap:nowrap;justify-content:space-between;align-items:center;pointer-events:none}
+ .stage.in-brk .brk-nav>*{pointer-events:auto}
+ .stage.in-brk .brk-fol{align-self:flex-end;margin-right:3%}
+ .stage.in-brk .brk-fol span{display:none}
+ .stage.in-brk .brk-fol button{min-width:40px;min-height:40px;padding:0 6px}
+ .stage.in-brk .brlog:not([open]){right:auto;width:44%}
+}
+@media(max-width:600px){.stage.in-brk .brlog summary{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:10px 10px}.stage.in-brk .brlog:not([open]){width:45%}.stage.in-brk .brk-fol button{min-width:38px;padding:0 4px}}
+@media(max-width:600px){.stage.in-brk .brlog:not([open]){width:41%}.stage.in-brk .brlog summary{font-size:12px;padding:10px 8px}.stage.in-brk .brk-fol{padding:1px}.stage.in-brk .brk-fol button{min-width:36px}}
+@media(max-width:600px){.stage.in-brk .brlog:not([open]){width:auto;right:3%}.stage.in-brk .brlog summary{font-size:13px;padding:10px 12px}.stage.in-brk .brk-fol{margin-bottom:50px}.stage.in-brk .brk-fol button{min-width:42px;min-height:42px}}
