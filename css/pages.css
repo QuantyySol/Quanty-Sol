@@ -62,3 +62,9 @@ ul.rules li:nth-child(5):before{background-color:rgba(255,191,63,.14);border-col
  ul.rules li{padding:10px 0 10px 36px;font-size:15px}ul.rules li:before{top:11px;width:24px;height:24px;background-size:14px}
  #stats .bn-h,#stats #bn-sgl{font-size:13px;margin:18px 0 8px}
 }
+/* nav fit (<=600px): all tabs visible in two compact rows, no sideways scroll; room suffix hidden (room shows in the in-stage tabs) */
+@media(max-width:600px){
+ header nav{flex-wrap:wrap!important;justify-content:center;overflow:visible!important;gap:3px!important;padding:2px 2px 6px!important;-webkit-mask-image:none!important;mask-image:none!important}
+ header nav a{font-size:12px!important;padding:6px 7px!important;letter-spacing:0!important;min-height:34px;box-sizing:border-box;display:inline-flex;align-items:center}
+ header nav a .rm-sub{display:none}
+}
