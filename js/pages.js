@@ -15,3 +15,8 @@ function empties(){Object.keys(EMPTY).forEach(function(id){var el=document.getEl
 if(window.Desk&&Desk.on)Desk.on('update',function(){setTimeout(empties,0)});
 empties();
 })();
+/* About copy: keep the bank sentence true to the data (each book's start_sol). */
+(function(){function fix(){var d=window.Desk&&Desk.data,b=d&&d.books;if(!b)return;var s=Object.keys(b).map(function(k){return +b[k].start_sol}).filter(function(v){return v>0});
+ if(!s.length||!s.every(function(v){return v===s[0]}))return;var p=document.querySelector('#about .card p');if(!p)return;
+ p.innerHTML=p.innerHTML.replace(/with a fake [\d.]+ SOL bank\./,'with a separate fake '+s[0]+' SOL bank for each trader.')}
+ if(window.Desk&&Desk.on)Desk.on('update',function(){setTimeout(fix,0)});})();
