@@ -142,3 +142,5 @@ window.DeskArcade={open,close};
 
 /* load the EGG FARM mini-game module (kept separate) */
 (function(){if(document.querySelector('script[src^="js/eggfarm.js"]'))return;const l=document.createElement('link');l.rel='stylesheet';l.href='css/eggfarm.css';document.head.appendChild(l);const s=document.createElement('script');s.src='js/eggfarm.js';s.defer=true;document.head.appendChild(s)})();
+/* load the Aurora sky cycle module (kept separate) */
+(function(){if(document.querySelector('script[src^="js/skycycle.js"]'))return;const l=document.createElement('link');l.rel='stylesheet';l.href='css/skycycle.css';document.head.appendChild(l);const s=document.createElement('script');s.src='js/skycycle.js';s.defer=true;document.head.appendChild(s)})();
