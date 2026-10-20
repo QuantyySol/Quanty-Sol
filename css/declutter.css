@@ -59,3 +59,21 @@
  main>section:not(#office) h2{font-size:28px;letter-spacing:-.02em}
  main>section:not(#office) .card{border-radius:14px;border-color:rgba(120,200,255,.10)}
 }
+
+/* ===== Mobile declutter v2 (<=600px): nav gets its own band above the VS board, no LIVE pill duplicate, dock snaps 3-up ===== */
+@media(max-width:600px){
+ .stage:not(.in-brk) .brk-nav{top:106px;gap:4px}
+ .stage .brk-nav .brk-tabs button,.stage .brk-nav .brk-fol button{min-height:40px;min-width:40px;padding-top:0;padding-bottom:0;font-size:13px}
+ .stage .brk-nav .brk-tabs,.stage .brk-nav .brk-fol{padding:2px}
+ /* bank totals already live on the VS board + dock: hide the duplicate LIVE pill in the Office */
+ .stage:not(.in-brk) .ticker{display:none!important}
+ /* dock: exactly 3 cards per screen, swipe for more, fade hints there is more */
+ #minis{justify-content:flex-start;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 8px;gap:6px;
+  -webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+ #minis.dk-end{-webkit-mask-image:none;mask-image:none}
+ #minis .mini{flex:0 0 calc((100% - 28px)/3);min-width:0;scroll-snap-align:start;box-sizing:border-box;padding-right:6px}
+ #minis .dk-t{overflow:hidden}
+ #minis .mini .nm,#minis .dk-i{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ #minis .dk-i{font-size:10px}
+}
+@media(max-width:600px){#minis .dk-i{white-space:normal;line-height:1.15;text-overflow:clip}}
