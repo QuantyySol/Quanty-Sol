@@ -57,3 +57,7 @@ Client-side live prices for every open coin, polled from the public DexScreener 
 - `delayed:true` means DexScreener had no quote (for example a pre-migration coin it doesn't list yet; pump.fun's API blocks browser CORS), so the numbers are the desk.json values. Show it as "DELAYED" with an amber dot instead of the green pulsing LIVE dot.
 - **VS board (Designer):** please read the current % from `Desk.live.books.quanty.pnl_pct` and `Desk.live.books.ledger.pnl_pct` when present (fall back to `Desk.data`), redraw on `desk:live`, and show the live MC (`mc_usd`, formatted like `$412K`) and `pnl_pct` of open coins with a pulsing LIVE dot. CSS classes `.lq-dot` (add `.dl` for delayed) and `.lq-tag` are available globally.
 - Monitor wall screens carry `data-live-mint`; livequotes fills `.mw-pnl`, `.mw-mc` and `.mw-lv` on them. It also updates `#bank` / `#pnl` and appends `#lq-strip` (LIVE dot + MC/P&L per coin + Ledger %) to `.ticker`.
+
+## Trending (`js/trending.js`)
+- `Desk.data.trending` = `{updated_at, source, coins:[{rank, ticker, mint, mc_usd, chg_5m, chg_1h, vol_usd_5m, vol_usd_1h, vol_usd_24h, age_s, progress_pct, migrated, kol_count, held_by:[book], rug_rejected}]}` (pump.fun app Trending board, refreshed on the box every 45 s). Mints here are public token mints from that board only.
+- The `#trending` section polls DexScreener every ~7 s only while that tab is open and visible.
