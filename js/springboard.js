@@ -11,7 +11,7 @@ const APPS=[
  {id:'tiltmaze',n:'Tilt Maze',ic:'🎱',c:['#d9a46b','#7a4a1c']},
  {id:'towers',n:'Tower Guard',ic:'🏰',c:['#9fb4ff','#3040a8']},
  {id:'bubblewrap',n:'Bubble Wrap',ic:'🫧',c:['#bff3ff','#3aa7c9']}];
-const APPS2=[{id:'gems',n:'Gems',ic:'💎',c:['#e7a6ff','#7a1ab8']},{id:'artillery',n:'Artillery',ic:'💣',c:['#c9b98a','#5d5230']},{id:'mines',n:'Mines',ic:'🚩',c:['#d0d8e0','#59677a']},{id:'marble',n:'Marble Run',ic:'🔮',c:['#9ef0ff','#1c6f9a']},{id:'airpuck',n:'Air Puck',ic:'🏒',c:['#ff9a9a','#b0202a']},{id:'solitaire',n:'Solitaire',ic:'♠️',c:['#fff6d8','#d1a85a']},{id:'gamecenter',n:'Game Center',ic:'🎮',c:['#9be27a','#1f6b2a'],set:2},{id:'settings',n:'Settings',ic:'⚙️',c:['#e0e4e8','#7d8794'],set:1}];
+const APPS2=[{id:'gems',n:'Gems',ic:'💎',c:['#e7a6ff','#7a1ab8']},{id:'artillery',n:'Artillery',ic:'💣',c:['#c9b98a','#5d5230']},{id:'mines',n:'Mines',ic:'🚩',c:['#d0d8e0','#59677a']},{id:'marble',n:'Marble Run',ic:'🔮',c:['#9ef0ff','#1c6f9a']},{id:'airpuck',n:'Air Puck',ic:'🏒',c:['#ff9a9a','#b0202a']},{id:'solitaire',n:'Solitaire',ic:'♠️',c:['#fff6d8','#d1a85a']},{id:'sudoku',n:'Sudoku',ic:'🔢',c:['#ffffff','#7d9cc4']},{id:'gamecenter',n:'Game Center',ic:'🎮',c:['#9be27a','#1f6b2a'],set:2},{id:'settings',n:'Settings',ic:'⚙️',c:['#e0e4e8','#7d8794'],set:1}];
 const DOCK=[{id:'taptap',n:'Tap Beats',ic:'🎵',c:['#ff8ad8','#9a1a8a']},{id:'whack',n:'Whack',ic:'🔨',c:['#b5e07a','#4f8a1c']},{id:'bricks',n:'Bricks',ic:'🧱',c:['#ffb07a','#c8320a']},{id:'memory',n:'Memory',ic:'🃏',c:['#ffffff','#9aa6b8']}];
 const HI=id=>'uq_sb_hi_'+id,getHi=id=>{try{return +localStorage.getItem(HI(id))||0}catch(e){return 0}},setHi=(id,v)=>{try{localStorage.setItem(HI(id),v)}catch(e){}};
 const REG={},W=320,H=448;let drg=0,setp,sec,scr,lock,board,app,cv,g,ov,ttl,muteBtn,cur=null,curId=null,state='idle',raf=0,last=0,actx=null;
@@ -67,15 +67,17 @@ const GC=(()=>{const LK='uq_sb_log',AK='uq_sb_ach',SK='uq_sb_ach_seen',NK='uq_sb
   {k:'same5',ic:'🎯',n:'Obsessed',d:'Play the same game 5 times in a row',p:10,ok:L=>L.some((x,i)=>i>=4&&[1,2,3,4].every(j=>L[i-j].i===x.i))},
   {k:'streak',ic:'📅',n:'Three-Day Streak',d:'Play on 3 days in a row',p:25,ok:streak},
   {k:'sol',ic:'♠️',n:'Patience',d:'Win a game of Solitaire',p:10,ok:L=>L.some(x=>x.i==='solitaire')},
-  {k:'sol3',ic:'⏱️',n:'Speed Deal',d:'Win Solitaire in under 3 minutes',p:20,ok:L=>L.some(x=>x.i==='solitaire'&&x.d!=null&&x.d<180)}];
+  {k:'sol3',ic:'⏱️',n:'Speed Deal',d:'Win Solitaire in under 3 minutes',p:20,ok:L=>L.some(x=>x.i==='solitaire'&&x.d!=null&&x.d<180)},
+  {k:'sdk',ic:'🔢',n:'Number Cruncher',d:'Solve a Sudoku',p:10,ok:L=>L.some(x=>x.i==='sudoku')},
+  {k:'sdkh',ic:'🧠',n:'Big Brain',d:'Solve a Hard Sudoku',p:20,ok:L=>L.some(x=>x.i==='sudoku'&&x.lv==='h')}];
  const TOT=A.reduce((a,x)=>a+x.p,0),pts=G=>A.filter(x=>G[x.k]).reduce((a,x)=>a+x.p,0);
- const xt=x=>x.d!=null?`<i class="gc-x">${Math.floor(x.d/60)}:${String(x.d%60).padStart(2,'0')} · ${x.m} mv</i>`:'';
+ const LVN={e:'Easy',m:'Medium',h:'Hard'},xt=x=>x.d!=null?`<i class="gc-x">${x.lv&&LVN[x.lv]?LVN[x.lv]+' · ':''}${Math.floor(x.d/60)}:${String(x.d%60).padStart(2,'0')} · ${x.m} mv</i>`:'';
  const ago=t=>{const m=Math.round((Date.now()-t)/6e4);return m<1?'just now':m<60?m+'m ago':m<1440?Math.round(m/60)+'h ago':Math.round(m/1440)+'d ago'};
  const meta=id=>NAMES().find(a=>a.id===id)||{n:id,ic:'🎮'};
  let tq=[],tb=null;function toast(ic,h,p){tq.push([ic,h,p]);if(!tb)nxt()}
  function nxt(){const t=tq.shift();if(!t){tb=null;return}tb=el('div','gc-toast',`<span class="ti">${t[0]}</span><span><b>${esc(t[1])}</b><i>${esc(t[2])}</i></span>`);scr.appendChild(tb);beep(1320,.08,'sine',.05);setTimeout(()=>beep(1760,.12,'sine',.05),90);
   requestAnimationFrame(()=>tb.classList.add('in'));setTimeout(()=>{tb.classList.remove('in');setTimeout(()=>{tb.remove();nxt()},350)},2600)}
- function round(id,s,nb,o){const L=log(),e={i:id,s,t:Date.now(),b:nb?1:0};if(o&&isFinite(o.d)&&isFinite(o.m)){e.d=Math.round(o.d);e.m=Math.round(o.m)}L.push(e);while(L.length>400)L.shift();wr(LK,L);
+ function round(id,s,nb,o){const L=log(),e={i:id,s,t:Date.now(),b:nb?1:0};if(o&&isFinite(o.d)&&isFinite(o.m)){e.d=Math.round(o.d);e.m=Math.round(o.m)}if(o&&LVN[o.lv])e.lv=o.lv;L.push(e);while(L.length>400)L.shift();wr(LK,L);
   const G=got();A.forEach(a=>{if(!G[a.k]&&a.ok(L)){G[a.k]=Date.now();toast(a.ic,'Achievement unlocked',a.n+' · '+a.p+' pts')}});wr(AK,G)}
  function hello(){if(said)return;said=1;const L=log();if(!L.length)return;setTimeout(()=>toast('🎮','Welcome back, '+nick(),L.length+' rounds · '+pts(got())+' pts'),450)}
  const unseen=()=>Math.max(0,Object.entries(got()).length-(+rd(SK,0)||0));
@@ -102,7 +104,7 @@ function settings(){unlock();ttl.textContent='Settings';setp.classList.remove('g
  const rows=NAMES().map(a=>`<div class="row"><span>${a.ic} ${a.n}</span><b>${getHi(a.id)||'–'}</b></div>`).join('');
  setp.innerHTML=`<h4>Sounds</h4><div class="grp"><div class="row"><span>Game sounds</span><button class="tog${muted?' off':''}" type="button">${muted?'OFF':'ON'}</button></div></div><h4>Best scores</h4><div class="grp">${rows}</div><div class="grp"><div class="row"><span>Reset best scores &amp; Game Center</span><button class="rst" type="button">Reset</button></div></div>`;
  setp.querySelector('.tog').onclick=()=>{muteBtn.onclick();settings()};
- setp.querySelector('.rst').onclick=e=>{const b=e.target;if(b.dataset.c){NAMES().forEach(a=>{try{localStorage.removeItem(HI(a.id));localStorage.removeItem('uq_sb_best_'+a.id)}catch(_){}});GC.wipe();badges();settings()}else{b.dataset.c=1;b.textContent='Tap again';setTimeout(()=>{if(b.isConnected){delete b.dataset.c;b.textContent='Reset'}},2500)}}}
+ setp.querySelector('.rst').onclick=e=>{const b=e.target;if(b.dataset.c){NAMES().forEach(a=>{try{localStorage.removeItem(HI(a.id));localStorage.removeItem('uq_sb_best_'+a.id)}catch(_){}});try{Object.keys(localStorage).filter(k=>k.indexOf('uq_sb_sudoku')===0).forEach(k=>localStorage.removeItem(k))}catch(_){}GC.wipe();badges();settings()}else{b.dataset.c=1;b.textContent='Tap again';setTimeout(()=>{if(b.isConnected){delete b.dataset.c;b.textContent='Reset'}},2500)}}}
 function lockUp(){lock.classList.remove('gone');const k=lock.querySelector('.sb-knob');k.style.left='3px'}
 function unlock(){const was=!lock.classList.contains('gone');lock.classList.add('gone');slide(300,900,.15,'sine');if(was)GC.hello()}
 function slider(){const k=lock.querySelector('.sb-knob'),tr=lock.querySelector('.sb-track'),lb=lock.querySelector('.lbl');let sx=null,max=0;
