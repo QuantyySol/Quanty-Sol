@@ -17,7 +17,7 @@ function mkMob(k,x,z){const g=new T.Group(),m=new T.MeshLambertMaterial({color:k
 function kill(m){const p=m.g.position;G.inv.drop('raw_meat',m.k.meat,p.x,p.y+.5,p.z);remove(m);G.toast('🥩 '+m.k.n+' dropped raw meat',1200)}
 function remove(m){try{m.rm&&m.rm()}catch(e){}G.scene.remove(m.g);mobs.delete(m)}
 // ---------- campfires (shared, kept) ----------
-const fires=new Map();let fid=0;
+const fires=new Map();let fid=0;try{G.net.keepCap&&G.net.keepCap('food',40)}catch(e){}
 function mkFire(id,x,y,z){if(fires.has(id))return;const g=new T.Group();
  const logM=new T.MeshLambertMaterial({color:0x6b4423});for(let i=0;i<2;i++){const l=new T.Mesh(new T.BoxGeometry(.9,.15,.15),logM);l.rotation.y=i*1.57;l.position.y=.1;g.add(l)}
  const fl=new T.Mesh(new T.ConeGeometry(.22,.5,6),new T.MeshBasicMaterial({color:0xff8a1f}));fl.position.y=.4;g.add(fl);
@@ -29,7 +29,7 @@ function cook(f){if(f.cooking)return G.toast('🔥 already cooking',900);
 G.net.on('food',m=>{if(m.k==='fire')mkFire(m.id,m.x,m.y,m.z);else if(m.k==='unfire'){const f=fires.get(m.id);if(f){f.rm&&f.rm();G.scene.remove(f.g);fires.delete(m.id)}}});
 G.ui.addButton('🔥','Place campfire',()=>{const h=G.raycast(5);if(!h)return G.toast('Look at the ground to place a campfire',1400);
  const id=G.net.id+'-'+(fid++)+'-'+Date.now()%1e5,x=h.x+h.n[0],y=h.y+h.n[1],z=h.z+h.n[2];
- mkFire(id,x,y,z);G.net.send('food',{k:'fire',id,x,y,z,keep:1});G.toast('🔥 Campfire placed. Press X on it with raw meat',1800)});
+ mkFire(id,x,y,z);G.net.send('food',{k:'fire',id,x,y,z},{keep:1,replace:'fire:'+id,maxAge:6*3600e3});G.toast('🔥 Campfire placed. Press X on it with raw meat',1800)});
 // ---------- apple trees: X on leaves shakes them ----------
 let shakeCd=0;
 G.on('interact',ev=>{if(ev.type!=='block'||!ev.hit||ev.hit.b!==LEAF)return;ev.handled=true;
