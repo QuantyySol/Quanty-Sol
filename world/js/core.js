@@ -94,7 +94,7 @@ const hl=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1.
 // ---- UI
 const $=id=>document.getElementById(id);
 G.toast=(m,ms=1800)=>{const t=$('toast');t.textContent=m;t.style.opacity=1;clearTimeout(t._h);t._h=setTimeout(()=>t.style.opacity=0,ms)};
-G.ui={button(label,title,fn){const b=document.createElement('button');b.textContent=label;b.title=title;b.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();fn(b)});$('feat').appendChild(b);return b},
+G.ui={button(label,title,fn){const b=document.createElement('button');b.textContent=label;b.title=title;b.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();G.ui._used(b);fn(b)});G.ui._tray(b);return b},
  meter(top,color){const m=document.createElement('div');m.className='meter';m.style.top=top+'px';m.innerHTML=`<i style="background:${color};width:100%"></i>`;document.body.appendChild(m);return v=>m.firstChild.style.width=Math.max(0,Math.min(100,v*100))+'%'},
  panel(opts,cb){const p=document.createElement('div');p.className='panel';opts.forEach(o=>{const b=document.createElement('button');b.textContent=o;b.onpointerdown=e=>{e.stopPropagation();p.remove();cb(o)};p.appendChild(b)});
   const x=document.createElement('button');x.textContent='✕';x.onpointerdown=e=>{e.stopPropagation();p.remove()};p.appendChild(x);document.body.appendChild(p)}};
@@ -196,23 +196,43 @@ setInterval(netStatus,2000);addEventListener('beforeunload',()=>G.net.send({t:'b
 // ---- extended plugin API
 G.world.getBlock=get;G.world.placeBlock=(x,y,z,b)=>set(x,y,z,b);G.world.removeBlock=(x,y,z)=>set(x,y,z,0);
 G.ui.addButton=G.ui.button;
+// feature tray: every G.ui.button lands in #feat; on touch (or 13+ buttons) #feat becomes a 2-col grid behind a 48px toggle, last-used pinned beside it
+{const feat=$('feat'),hud=$('hud'),tg=document.createElement('button'),pin=document.createElement('button');let last=null;
+ tg.id='trayT';tg.textContent='☰';tg.title='Features';pin.id='trayPin';pin.style.display='none';hud.append(tg,pin);
+ const mode=()=>{const on=matchMedia('(hover:none),(pointer:coarse)').matches||feat.children.length>=13;document.body.classList.toggle('tray',on);if(!on)document.body.classList.remove('trayOpen')};
+ const sw=e=>{e.stopPropagation();e.preventDefault()};
+ tg.addEventListener('pointerdown',e=>{sw(e);document.body.classList.toggle('trayOpen')});
+ pin.addEventListener('pointerdown',e=>{sw(e);if(last)last.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}))});
+ G.ui._tray=b=>{feat.appendChild(b);mode()};
+ G.ui._used=b=>{if(b===last)return;last=b;feat.prepend(b);pin.textContent=b.textContent;pin.title=b.title;pin.style.display='';document.body.classList.remove('trayOpen')};
+ setInterval(()=>{if(last){pin.className=last.className;if(pin.textContent!=last.textContent)pin.textContent=last.textContent}},300);
+ addEventListener('resize',mode);mode()}
 G.pauseInput=()=>{G.inputPaused=true;input.f=input.s=0;input.jump=false};G.resumeInput=()=>{G.inputPaused=false};
 G.overlay=function(){let c=document.getElementById('ovl');if(!c){c=document.createElement('canvas');c.id='ovl';c.style.cssText='position:fixed;inset:0;z-index:9;display:none;touch-action:none';document.body.appendChild(c)}
  c.width=innerWidth;c.height=innerHeight;return c};
 G.pushPlayers=function(center,radius,vec,remote){const p=me.pos;if(p.distanceTo(center)<radius){me.vel.add(vec);me.fallStart=null}
  if(!remote)G.net.send({t:'push',c:center.toArray(),r:radius,v:vec.toArray()})};
 G.net.on('push',m=>G.pushPlayers(new THREE.Vector3().fromArray(m.c),m.r,new THREE.Vector3().fromArray(m.v),true));
-// shared per-face paint layer (top faces): color + owner
-{const pm=new Map(),geo=new THREE.PlaneGeometry(1.02,1.02).rotateX(-Math.PI/2),mats={};
+// shared per-face paint layer (all 6 faces): color + owner. face: top|bottom|north(-z)|south(+z)|east(+x)|west(-x)
+{const pm=new Map(),mats={},H=Math.PI/2,P=()=>new THREE.PlaneGeometry(1.02,1.02);
+ const FG={top:P().rotateX(-H),bottom:P().rotateX(H),south:P(),north:P().rotateY(Math.PI),east:P().rotateY(H),west:P().rotateY(-H)};
+ const FO={top:[.5,1.01,.5],bottom:[.5,-.01,.5],south:[.5,.5,1.01],north:[.5,.5,-.01],east:[1.01,.5,.5],west:[-.01,.5,.5]};
+ const FN={top:[0,1,0],bottom:[0,-1,0],south:[0,0,1],north:[0,0,-1],east:[1,0,0],west:[-1,0,0]};
+ const K=(x,y,z,f)=>x+','+y+','+z+(f&&f!='top'?','+f:'');
  const M=c=>mats[c]||=new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.85,polygonOffset:true,polygonOffsetFactor:-2});
- G.paint={map:pm,get:(x,y,z)=>pm.get(x+','+y+','+z),
-  set(x,y,z,color,owner,remote){const k=x+','+y+','+z,o=pm.get(k);if(o){if(o.color==color)return;scene.remove(o.m)}
-   if(color==null){pm.delete(k);if(!remote)G.net.send({t:'paint',p:[[x,y,z,null,owner]],keep:1});return}
-   const m=new THREE.Mesh(geo,M(color));m.position.set(x+.5,y+1.01,z+.5);scene.add(m);pm.set(k,{color,owner,m});if(!remote)G._pq.push([x,y,z,color,owner])},
+ const del=k=>{const o=pm.get(k);if(o){scene.remove(o.m);pm.delete(k)}};
+ G.paint={map:pm,faces:Object.keys(FG),normals:FN,get:(x,y,z,face)=>pm.get(K(x,y,z,face)),
+  faceFromNormal(n){if(!n)return'top';const[a,b,c]=n;return b>0?'top':b<0?'bottom':a>0?'east':a<0?'west':c>0?'south':'north'},
+  set(x,y,z,color,owner,face,remote){if(face===true){remote=true;face='top'}face=FG[face]?face:'top';const k=K(x,y,z,face),o=pm.get(k);
+   if(o){if(o.color==color)return;scene.remove(o.m)}
+   if(color==null){pm.delete(k);if(!remote)G.net.send({t:'paint',p:[[x,y,z,null,owner,face]],keep:1});return}
+   const m=new THREE.Mesh(FG[face],M(color)),f=FO[face];m.position.set(x+f[0],y+f[1],z+f[2]);scene.add(m);pm.set(k,{color,owner,face,m});if(!remote)G._pq.push([x,y,z,color,owner,face])},
   count(){const n={};for(const v of pm.values())n[v.owner]=(n[v.owner]||0)+1;return n},materials:mats};
  G._pq=[];setInterval(()=>{if(G._pq.length){G.net.send({t:'paint',p:G._pq.splice(0),keep:1})}},250);
- G.net.on('paint',m=>m.p.forEach(([x,y,z,c,o])=>G.paint.set(x,y,z,c,o,true)));
- G.on('blockSet',(x,y,z,b)=>{if(b){const o=pm.get(x+','+(y-1)+','+z);if(o){scene.remove(o.m);pm.delete(x+','+(y-1)+','+z)}}else{const o=pm.get(x+','+y+','+z);if(o){scene.remove(o.m);pm.delete(x+','+y+','+z)}}})}
+ G.net.on('paint',m=>m.p.forEach(([x,y,z,c,o,f])=>G.paint.set(x,y,z,c,o,f||'top',true)));
+ // placing a block covers the neighbour faces it touches; removing a block drops all its paint
+ G.on('blockSet',(x,y,z,b)=>{if(b){for(const f in FN){const n=FN[f],opp={top:'bottom',bottom:'top',north:'south',south:'north',east:'west',west:'east'}[f];del(K(x+n[0],y+n[1],z+n[2],opp))}}
+  else for(const f in FG)del(K(x,y,z,f))})}
 // shared per-feature state: G.state(featureId) -> object; G.setState(featureId,patch) syncs to everyone (kept for late joiners)
 {const S={};G.state=f=>S[f]||={};G.setState=(f,patch,remote)=>{Object.assign(G.state(f),patch);if(!remote)G.net.send({t:'state',f,patch,keep:1});G.emit('state:'+f,G.state(f))};
  G.net.on('state',m=>G.setState(m.f,m.patch,true))}
