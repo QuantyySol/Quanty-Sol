@@ -1,6 +1,6 @@
 // Blockverse core. Features live in js/features/<name>.js and export default {name, init(G)}.
 import * as THREE from 'three';
-const FEATURES=['darksouls','splat','rocketball','ultrahand','okami','fallguys','pokemon'];
+const FEATURES=['darksouls','splat','rocketball','ultrahand','okami','fallguys','pokemon','food'];
 const CS=16, H=64, SEED=1337, RD=4;
 export const BLOCKS=[null,
  {n:'grass',c:0x5fa83b},{n:'dirt',c:0x8b5a2b},{n:'stone',c:0x8a8a8a},{n:'sand',c:0xe3d48a},
@@ -126,13 +126,19 @@ function kbInput(){if(stickId!=null||G._dpad)return;const f=(held.w||held.ArrowU
  if(f||s||G._kb){input.f=f;input.s=s;G._kb=f||s}if(held[' ']!==undefined&&(held[' ']||G._kj)){input.jump=!!held[' '];G._kj=held[' ']}}
 // ---- networking: Nostr ephemeral events over several free public relays (wss on 443, no accounts) + ntfy for block-edit persistence
 let finalizeEvent,sk;
-const ROOM='blockverse-io-w1',KIND=20420,NTFY='https://ntfy.sh/'+ROOM+'-edits';
+const RQ=(new URLSearchParams(location.search).get('room')||'').toLowerCase().replace(/[^a-z0-9_-]/g,'').slice(0,24);
+const ROOM='blockverse-io-w1'+(RQ?'-room-'+RQ:''),KIND=20420,NTFY='https://ntfy.sh/'+ROOM+'-edits';
 const RELAYS=['wss://nos.lol','wss://nostr.mom','wss://relay.damus.io','wss://relay.primal.net'];
-const others=G.others=new Map();const keepLog=[];const netH={};const seenEv=new Set();let q=[],latestPos=null;const sockets=[];
+const others=G.others=new Map();const keepLog=[],keepCaps={};
+let kseq=0;function keepPush(m){const now=Date.now();if(m.exp&&m.exp<now)return;if(m.kid&&keepLog.some(o=>o.kid==m.kid))return;
+ for(let i=keepLog.length-1;i>=0;i--){const o=keepLog[i];if((o.exp&&o.exp<now)||(m.rep!=null&&o.t==m.t&&o.rep==m.rep))keepLog.splice(i,1)}
+ keepLog.push(m);const cap=keepCaps[m.t];if(cap){let n=0;for(let i=keepLog.length-1;i>=0;i--)if(keepLog[i].t==m.t&&++n>cap)keepLog.splice(i,1)}
+ while(keepLog.length>3000)keepLog.shift()}
+const keepLive=()=>{const now=Date.now();return keepLog.filter(o=>!o.exp||o.exp>=now)};const netH={};const seenEv=new Set();let q=[],latestPos=null;const sockets=[];
 G.net={id:Math.random().toString(36).slice(2,10),relays:0,
- send(m,msg){if(typeof m=='string'){msg={...(msg||{}),t:m};m=msg}m.from=this.id;if(m.keep){keepLog.push(m);if(keepLog.length>3000)keepLog.shift()}
+ send(m,msg,opt){if(typeof m=='string'){msg={...(msg||{}),t:m};m=msg}if(opt){if(opt.keep)m.keep=1;if(opt.replace!=null)m.rep=String(opt.replace);if(opt.maxAge)m.exp=Date.now()+opt.maxAge}m.from=this.id;if(m.keep){m.kid=this.id+'.'+(++kseq);keepPush(m)}
   if(m.t=='pos')latestPos=m;else q.push(m)},
- on(t,fn){(netH[t]||=[]).push(fn)},get isHub(){return isLeader()}};
+ on(t,fn){(netH[t]||=[]).push(fn)},kept:()=>keepLive(),keepCap(t,n){keepCaps[t]=n;let c=0;for(let i=keepLog.length-1;i>=0;i--)if(keepLog[i].t==t&&++c>n)keepLog.splice(i,1)},room:null,get isHub(){return isLeader()}};
 function isLeader(){let min=G.net.id;for(const [k] of others)if(k<min)min=k;return min==G.net.id}
 function flush(){if(!finalizeEvent)return;const batch=q.splice(0,60);if(latestPos){batch.push(latestPos);latestPos=null}if(!batch.length)return;
  const ev=finalizeEvent({kind:KIND,created_at:Math.floor(Date.now()/1000),tags:[['t',ROOM]],content:JSON.stringify(batch)},sk);seenEv.add(ev.id);
@@ -145,10 +151,10 @@ function openRelay(url){const w=new WebSocket(url);sockets.push(w);
  w.onclose=()=>{sockets.splice(sockets.indexOf(w),1);netStatus();setTimeout(()=>openRelay(url),3000+Math.random()*3000)};w.onerror=()=>{}}
 const pendingSync={};
 function onMsg(m){if(!m||m.from==G.net.id)return;if(m.to&&m.to!=G.net.id){if(m.t=='sync')delete pendingSync[m.to];return}
- if(m.keep){keepLog.push(m);if(keepLog.length>3000)keepLog.shift()}
+ if(m.keep)keepPush(m);
  if(m.t=='set'){set(m.x,m.y,m.z,m.b,true);return}
  if(m.t=='hello'){pendingSync[m.from]=setTimeout(()=>{if(!pendingSync[m.from])return;delete pendingSync[m.from];
-   G.net.send({t:'sync',to:m.from,edits:[...edits].slice(-1500),keep:undefined,kl:keepLog.slice(-250),time:G.time})},300+Math.random()*1700);return}
+   G.net.send({t:'sync',to:m.from,edits:[...edits].slice(-1500),keep:undefined,kl:keepLive().slice(-250),time:G.time})},300+Math.random()*1700);return}
  if(m.t=='sync'){if(G._synced)return;G._synced=true;m.edits.forEach(([k,b])=>{const [x,y,z]=k.split(',').map(Number);set(x,y,z,b,true)});(m.kl||[]).forEach(onMsg);if(m.time)G.time=m.time;return}
  if(m.t=='pos'){let o=others.get(m.from);if(!o){o=mkAvatar(m.name,m.color);others.set(m.from,o);G.toast(m.name+' joined',1200);G.emit('playerJoin',m.from,o)}o.target=m;o.seen=performance.now();return}
  if(m.t=='bye'){const o=others.get(m.from);if(o){scene.remove(o.g);others.delete(m.from)}return}
@@ -156,8 +162,8 @@ function onMsg(m){if(!m||m.from==G.net.id)return;if(m.to&&m.to!=G.net.id){if(m.t
 async function connectNet(){try{const N=await import('https://esm.sh/nostr-tools@2.7.2/pure');finalizeEvent=N.finalizeEvent;sk=crypto.getRandomValues(new Uint8Array(32))}catch(e){console.warn('net lib failed',e);$('net').textContent='🔴 offline';return}RELAYS.forEach(openRelay);setTimeout(()=>G.net.send({t:'hello'}),2500)}
 function netStatus(){const r=sockets.filter(w=>w.readyState==1).length;G.net.relays=r;$('net').textContent=(r?'🟢 ':'🟡 ')+(others.size+1)+' online ▾'}
 // ntfy persistence: the leader (lowest id) flushes batched block edits every 20s; everyone loads the last 12h on start
-let pendingEdits=[];G.on('blockSet',(x,y,z,b)=>{pendingEdits.push([x+','+y+','+z,b]);if(pendingEdits.length>2000)pendingEdits.shift()});
-setInterval(()=>{if(!isLeader()||!pendingEdits.length)return;const batch=pendingEdits.splice(0,400);fetch(NTFY,{method:'POST',body:JSON.stringify(batch)}).catch(()=>{})},20000);
+const pendingEdits=new Map();G.on('blockSet',(x,y,z,b)=>{const k=x+','+y+','+z;pendingEdits.delete(k);pendingEdits.set(k,b);if(pendingEdits.size>2000)pendingEdits.delete(pendingEdits.keys().next().value)});
+setInterval(()=>{if(!isLeader()||!pendingEdits.size)return;const batch=[...pendingEdits].slice(0,400);batch.forEach(([k])=>pendingEdits.delete(k));fetch(NTFY,{method:'POST',body:JSON.stringify(batch)}).catch(()=>{})},20000);
 async function loadPersisted(){try{const r=await fetch(NTFY+'/json?poll=1&since=12h');const t=await r.text();
  t.split('\n').filter(Boolean).forEach(l=>{try{const m=JSON.parse(l);if(m.event=='message')JSON.parse(m.message).forEach(([k,b])=>edits.set(k,b))}catch(e){}})}catch(e){}}
 // avatars
@@ -414,6 +420,8 @@ G.on('tick',dt=>G.physics.step(dt));
   rT+=dt;if(rT>=4){rT=0;if(hunger>=9&&G.combat.hp<G.combat.max){G.combat.heal(1);G.hunger.set(hunger-.25)}else if(hunger<=0)G.combat.damage('me',1)}});
  G.on('kbd',k=>{if(k=='e')toggleBP();if(k=='Escape'&&bp.style.display!='none')toggleBP()});
  addEventListener('keyup',e=>{const k=kn(e);if(k=='z')G.surv.stopBreak();if(k=='u')G.mp.useUp()});G.on('kbd',k=>{if(k=='z')G.surv.startBreak()})}
+// test rooms: ?room=NAME isolates relay tag + ntfy topic
+G.net.room=RQ||null;if(RQ){const b=document.createElement('div');b.id='roomBadge';b.textContent='test room: '+RQ;document.body.appendChild(b)}
 // ---- start
 $('nick').value=localStorage.bvName||'';
 async function start(){G.name=($('nick').value.trim()||'Player'+(Math.random()*999|0)).slice(0,14);localStorage.bvName=G.name;
