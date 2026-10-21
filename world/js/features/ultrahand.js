@@ -1,9 +1,10 @@
 // Ultrahand (Zelda: Tears of the Kingdom style) for Blockverse.io. Owner: Launcher.
 // Touch: tap ✋ to enter Ultrahand mode. Hold on a block (~0.35s) to grab it; one-finger drag moves it;
 // two-finger twist rotates it (90° snaps); tap to glue it onto your contraption (first glue starts one).
-// 🔧 adds a part (wheel, fan, spring, rocket) to your hand. 🚀 LAUNCH fires rockets + springs of the contraption
-// you ride or built. Ride: stand on it; the stick drives (wheels), jump = fan lift. Desktop: G grab/glue, Q/E rotate,
-// R/F nudge held piece up/down, L launch. Contraptions sync via G.net 'ultrahand' (keep:1 for late joiners) and
+// 🔧 adds a part (wheel, fan, spring, rocket; inventory items uh_*, craft in 🎒) to your hand. 🚀 LAUNCH fires rockets + springs of the contraption
+// New core controls: while ✋ is on, Y = grab/glue (setUse); X on a contraption = board it; B on a piece = detach it; A while riding = launch (springs/rockets).
+// Ride: stand on it; the stick drives (wheels), jump = fan lift. Desktop: G grab/glue, ,/. rotate,
+// R/H nudge held piece up/down, L launch. Contraptions sync via G.net 'ultrahand' (keep:1 for late joiners) and
 // despawn after ~3 min with nobody near them.
 //
 // SPRING-PAD HOOK (for fallguys.js or any feature, no edits to this file needed):
@@ -15,6 +16,11 @@ export default{name:'ultrahand',init(G){
  const T=G.THREE,B=G.BLOCKS,F='ultrahand',me=G.player,UP=new T.Vector3(0,1,0);
  const PART={wheel:{c:0x222222,e:'🛞'},fan:{c:0xdddddd,e:'🌀'},spring:{c:0x66ff66,e:'🌱'},rocket:{c:0xff5533,e:'🚀'}};
  const DESPAWN=180,rigs=new Map(),pads=new Map();let seq=0,mode=false,held=null,draft=null,lastNear=null;
+ // parts are inventory items (craft in 🎒; small starter stack once)
+ const IV=G.inv,IT={};if(IV&&IV.defineItem){for(const k in PART)IT[k]=IV.defineItem('uh_'+k,{name:k,icon:PART[k].e,stack:16,color:PART[k].c});
+  if(G.RECIPES){const P=9,S=100,ST=3,L=12;G.RECIPES.push({out:[IT.wheel,2],in:[[P,2],[S,1]]},{out:[IT.fan,1],in:[[P,3],[S,2]]},{out:[IT.spring,2],in:[[ST,1],[S,2]]},{out:[IT.rocket,1],in:[[ST,2],[L,0]]})}
+  try{if(!localStorage.uh_starter){for(const k in IT)IV.add(IT[k],2);localStorage.uh_starter=1}}catch(_){}}
+ const giveBack=c=>{if(c.part&&IT[c.part])IV.add(IT[c.part],1)};
  const mat={};const M=c=>mat[c]||=new T.MeshLambertMaterial({color:c});
  function cellMesh(c){const g=new T.Group();
   if(c.part=='wheel'){const m=new T.Mesh(new T.CylinderGeometry(.48,.48,.35,14).rotateZ(Math.PI/2),M(0x222222));const h=new T.Mesh(new T.CylinderGeometry(.18,.18,.37,8).rotateZ(Math.PI/2),M(0xbbbbbb));g.add(m,h);g.userData.wheel=m}
@@ -29,10 +35,20 @@ export default{name:'ultrahand',init(G){
   const r={id:d.id,owner:d.owner,cells:[],g,body:null,idle:0,seen:performance.now(),burn:0,frozen:!!d.frozen,tag:G.label('🛠','#7fffd4')};r.tag.position.y=1.6;r.tag.scale.set(1,.25,1);g.add(r.tag);
   r.body=G.physics.add({pos:g.position.clone(),radius:.5,bounce:.15,gravity:20,drag:.6,mesh:g});r.body.frozen=remote||r.frozen;
   (d.cells||[]).forEach(c=>addCell(r,c));rigs.set(r.id,r);return r}
- function addCell(r,c){if(r.cells.some(o=>o.x==c.x&&o.y==c.y&&o.z==c.z))return;r.cells.push(c);const m=cellMesh(c);c.m=m;r.g.add(m)}
+ function addCell(r,c){if(r.cells.some(o=>o.x==c.x&&o.y==c.y&&o.z==c.z))return;r.cells.push(c);const m=cellMesh(c);c.m=m;r.g.add(m);
+  // B/X targets: one per piece (B detaches it, X boards the contraption)
+  const wp=new T.Vector3();c.untarget=G.combat?.addTarget?.({get pos(){return m.getWorldPosition(wp)},radius:.6,kind:'contraption',name:'contraption',rig:r,cell:c})}
+ function rmCell(r,c,remote){const i=r.cells.indexOf(c);if(i<0)return;r.cells.splice(i,1);c.untarget&&c.untarget();r.g.remove(c.m);
+  if(!remote){const w=c.m.getWorldPosition(new T.Vector3()).floor();
+   giveBack(c);if(!c.part){if(!(G.inv&&G.inv.add(c.b,1)==0)&&!G.world.solid(G.world.getBlock(w.x,w.y,w.z)))G.world.placeBlock(w.x,w.y,w.z,c.b)}
+   G.net.send(F,{k:'rm',id:r.id,c:pack(c),keep:1});G.toast('🔧 Detached '+(c.part?PART[c.part].e+' '+c.part:B[c.b]?.n||'piece'),900)}
+  if(!r.cells.length)killRig(r,remote)}
+ function board(r){let top=null,tv=-1e9;for(const c of r.cells){const w=c.m.getWorldPosition(new T.Vector3());if(w.y>tv){tv=w.y;top=w}}if(!top)return;
+  me.pos.set(top.x,top.y+.55,top.z);me.vel.set(0,0,0);me.fallStart=null;if(!mine(r))claim(r);if(r===draft)draft=null;r.frozen=false;r.body.frozen=false;
+  G.toast('🛞 Riding · A = '+(n(r,'rocket')||n(r,'spring')?'launch':'jump'),1100)}
  const n=(r,k)=>r.cells.filter(c=>c.part==k).length;
  const pack=c=>({x:c.x,y:c.y,z:c.z,b:c.b,part:c.part,r:c.r});
- function killRig(r,remote){G.scene.remove(r.g);G.physics.remove(r.body);rigs.delete(r.id);if(draft===r)draft=null;if(!remote)G.net.send(F,{k:'gone',id:r.id,keep:1})}
+ function killRig(r,remote){r.cells.forEach(c=>c.untarget&&c.untarget());G.scene.remove(r.g);G.physics.remove(r.body);rigs.delete(r.id);if(draft===r)draft=null;if(!remote)G.net.send(F,{k:'gone',id:r.id,keep:1})}
  function mine(r){return r.owner==G.net.id}
  // ---- held piece (floats in front of the camera)
  const fwd=()=>{const d=new T.Vector3();G.camera.getWorldDirection(d);return d};
@@ -43,6 +59,7 @@ export default{name:'ultrahand',init(G){
   if(!held.c.part){const p=heldPos().floor();if(!G.world.solid(G.world.getBlock(p.x,p.y,p.z)))G.world.placeBlock(p.x,p.y,p.z,held.c.b)}held=null;setHint()}
  function grab(){const h=G.raycast(8);if(!h){G.toast('Aim at a block');return}if(B[h.b]?.liquid)return;G.world.removeBlock(h.x,h.y,h.z);holdPiece({b:h.b});held.dist=Math.max(2,Math.min(5,h.dist));G.toast('✋ Grabbed '+B[h.b].n+' · tap to glue',1200)}
  function glue(){if(!held)return grab();const wp=heldPos();
+  if(held.c.part&&IT[held.c.part]&&!IV.remove(IT[held.c.part],1)){G.toast('No '+PART[held.c.part].e+' left · craft more in 🎒',1400);return}
   if(!draft||!rigs.has(draft.id)){const p=[Math.floor(wp.x)+.5,Math.floor(wp.y)+.5,Math.floor(wp.z)+.5];
    draft=mkRig({id:G.net.id+':'+Date.now().toString(36)+(seq++),owner:G.net.id,p,yaw:0,frozen:true,cells:[]});G.net.send(F,{k:'new',r:{id:draft.id,owner:draft.owner,p,yaw:0,frozen:true,cells:[]},keep:1})}
   const l=draft.g.worldToLocal(wp.clone());let c={...held.c,x:Math.round(l.x),y:Math.round(l.y),z:Math.round(l.z),r:held.rot};
@@ -64,13 +81,14 @@ export default{name:'ultrahand',init(G){
   up(e){if(!mode||!pts.has(e.pointerId))return prev?.up(e);pts.delete(e.pointerId);clearTimeout(holdT);if(pts.size<2)twist=null;
    if(tap&&!tap.moved&&performance.now()-tap.t<350&&held)glue();tap=null;return true}};
  // ---- UI
- const hint=document.createElement('div');hint.style.cssText='position:fixed;left:50%;bottom:calc(215px + env(safe-area-inset-bottom));transform:translateX(-50%);font:600 13px system-ui,sans-serif;color:#7fffd4;background:rgba(0,20,30,.6);padding:4px 10px;border-radius:10px;pointer-events:none;z-index:6;display:none;text-align:center;max-width:90vw';document.body.appendChild(hint);
+ const hint=document.createElement('div');hint.style.cssText='position:fixed;left:50%;top:calc(112px + env(safe-area-inset-top));transform:translateX(-50%);font:600 13px system-ui,sans-serif;color:#7fffd4;background:rgba(0,20,30,.6);padding:4px 10px;border-radius:10px;pointer-events:none;z-index:6;display:none;text-align:center;max-width:90vw';document.body.appendChild(hint);
  function setHint(){hint.style.display=mode?'block':'none';hint.textContent=held?'drag = move · twist = rotate · tap = glue':'hold a block to grab · 🔧 for parts · 🚀 launch'}
  const mb=G.ui.addButton('✋','Ultrahand mode (G)',()=>toggle());
- function toggle(){mode=!mode;mb.style.outline=mode?'3px solid #7fffd4':'';mb.style.boxShadow=mode?'0 0 14px #7fffd4':'';if(!mode){dropHeld();pts.clear()}setHint();G.toast(mode?'✋ Ultrahand on':'Ultrahand off',900)}
- G.ui.addButton('🔧','Ultrahand: add a part',()=>G.ui.panel(Object.keys(PART).map(k=>PART[k].e+' '+k),s=>{if(!mode)toggle();holdPiece({b:3,part:s.split(' ')[1]});held.dist=2.5}));
+ let useRel=null;
+ function toggle(){mode=!mode;if(mode&&!useRel&&G.ui.setUse)useRel=G.ui.setUse({icon:'✋',label:'Grab/Glue',onPress:()=>glue()});else if(!mode&&useRel){useRel();useRel=null}mb.style.outline=mode?'3px solid #7fffd4':'';mb.style.boxShadow=mode?'0 0 14px #7fffd4':'';if(!mode){dropHeld();pts.clear()}setHint();G.toast(mode?'✋ Ultrahand on':'Ultrahand off',900)}
+ G.ui.addButton('🔧','Ultrahand: add a part',()=>G.ui.panel(Object.keys(PART).map(k=>PART[k].e+' '+k),s=>{const k=s.split(' ')[1];if(IT[k]&&IV.count(IT[k])<1)return G.toast('No '+PART[k].e+' '+k+' · craft in 🎒',1400);if(!mode)toggle();holdPiece({b:3,part:s.split(' ')[1]});held.dist=2.5}));
  const lb=document.createElement('button');lb.textContent='🚀 LAUNCH';lb.title='Fire rockets and springs (L)';
- lb.style.cssText='position:fixed;right:calc(64px + env(safe-area-inset-right));bottom:calc(150px + env(safe-area-inset-bottom));z-index:7;font:800 16px system-ui,sans-serif;padding:14px 18px;border-radius:16px;border:2px solid #ffb347;background:linear-gradient(135deg,#ff5533,#ff9a2a);color:#fff;box-shadow:0 0 16px rgba(255,120,40,.7);display:none;touch-action:none';
+ lb.style.cssText='position:fixed;right:calc(12px + env(safe-area-inset-right));bottom:calc(258px + env(safe-area-inset-bottom));z-index:7;font:800 16px system-ui,sans-serif;padding:14px 18px;border-radius:16px;border:2px solid #ffb347;background:linear-gradient(135deg,#ff5533,#ff9a2a);color:#fff;box-shadow:0 0 16px rgba(255,120,40,.7);display:none;touch-action:none';
  lb.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();launch()});document.body.appendChild(lb);
  function nearest(){let best=null,bd=12;for(const r of rigs.values()){const d=r.g.position.distanceTo(me.pos);if(d<bd){bd=d;best=r}}return best}
  function launch(){const r=(draft&&rigs.has(draft.id))?draft:nearest();if(!r||!r.cells.length)return G.toast('Glue a contraption first ✋');
@@ -79,11 +97,14 @@ export default{name:'ultrahand',init(G){
   if(sp)r.body.vel.y=Math.max(r.body.vel.y,8+sp*3);if(ro){r.burn=2.2;r.dir=f.toArray()}if(!ro&&!sp)r.body.vel.addScaledVector(f,3);
   G.net.send(F,{k:'fire',id:r.id,burn:r.burn,dir:r.dir});G.toast(ro||sp?'🚀 LAUNCH!':'Released! Add 🚀 or 🌱 for lift-off',1000);G.emit('bounce')}
  function claim(r){r.owner=G.net.id;r.body.frozen=r.frozen;r.body.pos.copy(r.g.position);G.net.send(F,{k:'own',id:r.id})}
- G.on('kbd',k=>{if(k=='g'){if(!mode)toggle();else glue()}if(k=='l')launch();if(held){if(k=='q')held.rot--;if(k=='e')held.rot++;if(k=='r')held.off.y+=.5;if(k=='f')held.off.y-=.5}if(k=='Escape'&&mode)toggle()});
+ G.on('kbd',k=>{if(k=='g'){if(!mode)toggle();else glue()}if(k=='l')launch();if(held){if(k==',')held.rot--;if(k=='.')held.rot++;if(k=='r')held.off.y+=.5;if(k=='h')held.off.y-=.5}if(k=='Escape'&&mode)toggle()});
  // ---- network
+ G.on('interact',ev=>{if(ev.target&&ev.target.kind=='contraption'&&rigs.has(ev.target.rig.id)){ev.handled=true;board(ev.target.rig)}});
+ G.on('attack',ev=>{const t=ev.target;if(t&&t.kind=='contraption'&&rigs.has(t.rig.id)){ev.cancel=true;ev.handled=true;rmCell(t.rig,t.cell)}});
  G.net.on(F,m=>{const r=rigs.get(m.id||m.r?.id);
   if(m.k=='new'){mkRig(m.r,true);return}if(m.k=='pad'){m.off?removePad(m.x,m.y,m.z,true):springPad(m.x,m.y,m.z,m.o,true);return}if(!r)return;r.seen=performance.now();
   if(m.k=='cell')addCell(r,m.c);
+  else if(m.k=='rm'){const c=r.cells.find(o=>o.x==m.c.x&&o.y==m.c.y&&o.z==m.c.z);c&&rmCell(r,c,true)}
   else if(m.k=='pos'){r.tp=new T.Vector3().fromArray(m.p);r.tyaw=m.yaw;r.frozen=!!m.fz;if(m.b!==undefined)r.burn=m.b}
   else if(m.k=='own'){r.owner=m.from;r.body.frozen=true}
   else if(m.k=='fire'){r.burn=m.burn||0;r.frozen=false}
@@ -96,9 +117,9 @@ export default{name:'ultrahand',init(G){
  G.on('ultrahand:pad',(x,y,z,o)=>springPad(x,y,z,o));
  G.ultrahand={springPad:(x,y,z,o)=>springPad(x,y,z,o),removePad:(x,y,z)=>removePad(x,y,z),rigs,pads,PART,
   _test:{build(cells,p){const r=mkRig({id:G.net.id+':t'+(seq++),owner:G.net.id,p,yaw:0,frozen:true,cells:[]});G.net.send(F,{k:'new',r:{id:r.id,owner:r.owner,p,yaw:0,frozen:true,cells:[]},keep:1});
-   cells.forEach(c=>{addCell(r,c);G.net.send(F,{k:'cell',id:r.id,c:pack(c),keep:1})});draft=r;return r.id},launch,toggle,grab,glue,holdPiece}};
+   cells.forEach(c=>{addCell(r,c);G.net.send(F,{k:'cell',id:r.id,c:pack(c),keep:1})});draft=r;return r.id},launch,board:id=>board(rigs.get(id)),detach:(id,i)=>{const r=rigs.get(id);rmCell(r,r.cells[i])},riding:()=>ridingNow&&ridingNow.r.id,get use(){return !!useRel},toggle,grab,glue,holdPiece}};
  // ---- per-frame
- let st=0;const tmp=new T.Vector3();
+ let st=0,ridingNow=null,jPrev=false;const tmp=new T.Vector3();
  G.on('tick',(dt,now)=>{st+=dt;const send=st>.12;if(send)st=0;const pp=me.pos;
   if(held){held.m.position.copy(heldPos());held.m.rotation.y=held.rot*Math.PI/2}
   for(const p of pads.values()){p.t=Math.max(0,p.t-dt);p.m.scale.y=1-p.t*1.5;
@@ -118,10 +139,11 @@ export default{name:'ultrahand',init(G){
       if(n(r,'fan')&&G.input.jump)b.vel.y+=n(r,'fan')*26*dt}
      if(n(r,'spring')&&b.onGround&&b.vel.y<=.5&&r.burn<=0)b.vel.y=7+n(r,'spring');
      b.onGround=false;b.vel.y=Math.min(b.vel.y,30)}
-    if(r.idle>DESPAWN||g.position.y<-30){killRig(r);G.toast('An unattended contraption despawned',1200);continue}
+    if(r.idle>DESPAWN||g.position.y<-30){r.cells.forEach(giveBack);killRig(r);G.toast('An unattended contraption despawned',1200);continue}
     if(send&&(!r.frozen||!r.sentFrozen)){r.sentFrozen=r.frozen;G.net.send(F,{k:'pos',id:r.id,p:g.position.toArray().map(v=>+v.toFixed(2)),yaw:+g.rotation.y.toFixed(2),fz:r.frozen?1:0,b:+r.burn.toFixed(1)})}}
    else{if(r.tp){g.position.lerp(r.tp,Math.min(1,dt*10));g.rotation.y+=(r.tyaw-g.rotation.y)*Math.min(1,dt*10);r.body.pos.copy(g.position)}
     if(performance.now()-r.seen>DESPAWN*1000&&r.idle>DESPAWN)killRig(r,true)}}
+  ridingNow=riding;const jE=G.input.jump&&!jPrev;jPrev=!!G.input.jump;if(riding&&jE&&(n(riding.r,'rocket')||n(riding.r,'spring'))){draft=riding.r;launch()}
   // ride: carry the player with the contraption
   if(riding){const {r,c}=riding;const top=r.g.localToWorld(new T.Vector3(c.x,c.y+.5,c.z)).y;
    if(lastNear&&lastNear.r===r){me.pos.add(tmp.copy(r.g.position).sub(lastNear.p))}
