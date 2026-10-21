@@ -64,7 +64,7 @@ const me=G.player={pos:new THREE.Vector3(8.5,0,8.5),vel:new THREE.Vector3(),yaw:
 function collide(p){for(let x=Math.floor(p.x-.3);x<=Math.floor(p.x+.3);x++)for(let y=Math.floor(p.y);y<=Math.floor(p.y+1.7);y++)for(let z=Math.floor(p.z-.3);z<=Math.floor(p.z+.3);z++)if(solid(get(x,y,z)))return true;return false}
 G.collide=collide;
 const input={f:0,s:0,jump:false};G.input=input;
-function physics(dt){const sp=4.6*me.speedMul;const sinY=Math.sin(me.yaw),cosY=Math.cos(me.yaw);
+function physics(dt){const sp=4.6*me.speedMul*(G.mp&&G.mp.sprint?1.6:1)*(G.mp&&G.mp.crouch?.45:1);const sinY=Math.sin(me.yaw),cosY=Math.cos(me.yaw);
  const wx=(-sinY*input.f+cosY*input.s)*sp,wz=(-cosY*input.f-sinY*input.s)*sp;
  const inWater=BLOCKS[get(Math.floor(me.pos.x),Math.floor(me.pos.y+.5),Math.floor(me.pos.z))]?.liquid;
  me.vel.x+=(wx-me.vel.x)*Math.min(1,dt*10);me.vel.z+=(wz-me.vel.z)*Math.min(1,dt*10);
@@ -110,19 +110,19 @@ const endStick=e=>{if(e.pointerId==stickId){stickId=null;input.f=input.s=0;knob.
 stick.addEventListener('pointerup',endStick);stick.addEventListener('pointercancel',endStick);
 const cv=renderer.domElement;
 cv.addEventListener('pointerdown',e=>{if(G.capture&&G.capture.down(e))return;if(e.pointerType=='mouse'){if(document.pointerLockElement!=cv){cv.requestPointerLock?.();return}
-  if(e.button==0)G.breakBlock();else if(e.button==2)G.placeBlock();return}lookId=e.pointerId;lx=e.clientX;ly=e.clientY});
+  if(e.button==0){if(!G.mp||!G.mp.attack(true))G.breakBlock()}else if(e.button==2)G.placeBlock();return}lookId=e.pointerId;lx=e.clientX;ly=e.clientY});
 cv.addEventListener('pointermove',e=>{if(G.capture&&G.capture.move(e))return;if(e.pointerId==lookId){look((e.clientX-lx)*.006,(e.clientY-ly)*.006);lx=e.clientX;ly=e.clientY}});
 cv.addEventListener('pointerup',e=>{if(G.capture&&G.capture.up(e))return;if(e.pointerId==lookId)lookId=null});
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('mousemove',e=>{if(document.pointerLockElement==cv)look(e.movementX*.0025,e.movementY*.0025)});
 function look(dx,dy){me.yaw-=dx;me.pitch=Math.max(-1.5,Math.min(1.5,me.pitch-dy))}
 const hold=(id,on,off)=>{const b=$(id);b.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();on()});if(off){b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off)}};
-hold('bJump',()=>input.jump=true,()=>input.jump=false);hold('bBreak',()=>G.breakBlock());hold('bPlace',()=>G.placeBlock());
+
 const held={};const kn=event=>event.key.length==1?event.key.toLowerCase():event.key;
 addEventListener('keydown',event=>{if(event.target.tagName=='INPUT')return;const k=kn(event);held[k]=1;if(k>='1'&&k<='9'){const n=+k-1;if(n<HOT.length){me.sel=n;drawHot()}}G.emit('kbd',k)});
 addEventListener('keyup',event=>held[kn(event)]=0);
 addEventListener('wheel',e=>{me.sel=(me.sel+(e.deltaY>0?1:HOT.length-1))%HOT.length;drawHot()});
-function kbInput(){if(stickId!=null)return;const f=(held.w||held.ArrowUp?1:0)-(held.s||held.ArrowDown?1:0),s=(held.d||held.ArrowRight?1:0)-(held.a||held.ArrowLeft?1:0);
+function kbInput(){if(stickId!=null||G._dpad)return;const f=(held.w||held.ArrowUp?1:0)-(held.s||held.ArrowDown?1:0),s=(held.d||held.ArrowRight?1:0)-(held.a||held.ArrowLeft?1:0);
  if(f||s||G._kb){input.f=f;input.s=s;G._kb=f||s}if(held[' ']!==undefined&&(held[' ']||G._kj)){input.jump=!!held[' '];G._kj=held[' ']}}
 // ---- networking: Nostr ephemeral events over several free public relays (wss on 443, no accounts) + ntfy for block-edit persistence
 let finalizeEvent,sk;
@@ -150,11 +150,11 @@ function onMsg(m){if(!m||m.from==G.net.id)return;if(m.to&&m.to!=G.net.id){if(m.t
  if(m.t=='hello'){pendingSync[m.from]=setTimeout(()=>{if(!pendingSync[m.from])return;delete pendingSync[m.from];
    G.net.send({t:'sync',to:m.from,edits:[...edits].slice(-1500),keep:undefined,kl:keepLog.slice(-250),time:G.time})},300+Math.random()*1700);return}
  if(m.t=='sync'){if(G._synced)return;G._synced=true;m.edits.forEach(([k,b])=>{const [x,y,z]=k.split(',').map(Number);set(x,y,z,b,true)});(m.kl||[]).forEach(onMsg);if(m.time)G.time=m.time;return}
- if(m.t=='pos'){let o=others.get(m.from);if(!o){o=mkAvatar(m.name,m.color);others.set(m.from,o);G.toast(m.name+' joined',1200)}o.target=m;o.seen=performance.now();return}
+ if(m.t=='pos'){let o=others.get(m.from);if(!o){o=mkAvatar(m.name,m.color);others.set(m.from,o);G.toast(m.name+' joined',1200);G.emit('playerJoin',m.from,o)}o.target=m;o.seen=performance.now();return}
  if(m.t=='bye'){const o=others.get(m.from);if(o){scene.remove(o.g);others.delete(m.from)}return}
  (netH[m.t]||[]).forEach(f=>{try{f(m)}catch(e){console.error(e)}})}
 async function connectNet(){try{const N=await import('https://esm.sh/nostr-tools@2.7.2/pure');finalizeEvent=N.finalizeEvent;sk=crypto.getRandomValues(new Uint8Array(32))}catch(e){console.warn('net lib failed',e);$('net').textContent='🔴 offline';return}RELAYS.forEach(openRelay);setTimeout(()=>G.net.send({t:'hello'}),2500)}
-function netStatus(){const r=sockets.filter(w=>w.readyState==1).length;G.net.relays=r;$('net').textContent=(r?'🟢 online':'🟡 connecting')+' · '+(others.size+1)+' players'+(r?' · '+r+' relays':'')}
+function netStatus(){const r=sockets.filter(w=>w.readyState==1).length;G.net.relays=r;$('net').textContent=(r?'🟢 ':'🟡 ')+(others.size+1)+' online ▾'}
 // ntfy persistence: the leader (lowest id) flushes batched block edits every 20s; everyone loads the last 12h on start
 let pendingEdits=[];G.on('blockSet',(x,y,z,b)=>{pendingEdits.push([x+','+y+','+z,b]);if(pendingEdits.length>2000)pendingEdits.shift()});
 setInterval(()=>{if(!isLeader()||!pendingEdits.length)return;const batch=pendingEdits.splice(0,400);fetch(NTFY,{method:'POST',body:JSON.stringify(batch)}).catch(()=>{})},20000);
@@ -181,11 +181,11 @@ function sky(dt){G.time+=dt/G.dayLen;const t=G.time%1,a=Math.sin(t*Math.PI*2);co
  scene.background=c;scene.fog.color=c;hemi.intensity=0.25+l*0.85;sun.intensity=l*0.8;sun.position.set(Math.cos(t*Math.PI*2)*60,Math.max(5,a*60),20)}
 function frame(now){requestAnimationFrame(frame);let dt=Math.min(0.05,(now-last)/1000);last=now;if(!started)return;
  if(!G.inputPaused)kbInput();else{input.f=input.s=0;input.jump=false}ensureChunks();if(!G.frozen){physics(dt);sky(dt)}
- camera.position.set(me.pos.x,me.pos.y+1.6,me.pos.z);camera.rotation.set(me.pitch,me.yaw,0,'YXZ');
+ camera.position.set(me.pos.x,me.pos.y+(G.mp&&G.mp.crouch?1.2:1.6),me.pos.z);camera.rotation.set(me.pitch,me.yaw,0,'YXZ');
  const h=G.raycast();hl.visible=!!h;if(h)hl.position.set(h.x+.5,h.y+.5,h.z+.5);
  for(const [id,o] of others){if(now-o.seen>10000){scene.remove(o.g);others.delete(id);continue}const t=o.target;
   o.g.position.lerp(new THREE.Vector3(t.x,t.y,t.z),Math.min(1,dt*10));o.g.rotation.y=t.yaw}
- posT+=dt;if(posT>0.1){posT=0;G.net.send({t:'pos',x:+me.pos.x.toFixed(2),y:+me.pos.y.toFixed(2),z:+me.pos.z.toFixed(2),yaw:+me.yaw.toFixed(2),name:G.name,color:G.color,ex:me.extra})}
+ posT+=dt;if(posT>0.1){posT=0;G.net.send({t:'pos',x:+me.pos.x.toFixed(2),y:+me.pos.y.toFixed(2),z:+me.pos.z.toFixed(2),yaw:+me.yaw.toFixed(2),name:G.name,color:G.color,ex:me.extra,hp:G.combat?G.combat.hp:10,cr:G.mp&&G.mp.crouch?1:0})}
  G.emit('tick',dt,now);
  $('info').textContent=`XYZ ${me.pos.x|0} ${me.pos.y|0} ${me.pos.z|0} · ${G.isNight()?'🌙':'☀️'} · ${BLOCKS[HOT[me.sel]].n}`+(G.infoExtra?' · '+G.infoExtra():'');
  renderer.render(scene,camera)}
@@ -243,6 +243,97 @@ G.physics={bodies:new Set(),add(b){b.vel||=new THREE.Vector3();b.radius??=.5;b.b
    if(solid(get(Math.floor(b.pos.x+off.x),Math.floor(b.pos.y+off.y),Math.floor(b.pos.z+off.z)))){b.pos[ax]=o;b.vel[ax]*=-b.bounce;if(ax=='y')b.onGround=true}}
   b.mesh&&b.mesh.position.copy(b.pos)}}};
 G.on('tick',dt=>G.physics.step(dt));
+// ---- multiplayer combat + controls: D-pad/joystick, A/B/X/Y cluster, hearts, emotes, quick chat, players list
+{const V3=THREE.Vector3,mp=G.mp={sprint:false,crouch:false},MAX=10,REACH=3.6;let hp=MAX,inv=0,lastHitBy=null;
+ const ui=document.createElement('div');ui.id='mp';$('hud').appendChild(ui);
+ ui.innerHTML=`<div id="hearts"></div><div id="kfeed"></div>
+ <div id="dpad">${['ul','u','ur','l','c','r','dl','d','dr'].map(k=>`<i data-k="${k}">${{u:'▲',d:'▼',l:'◀',r:'▶'}[k]||''}</i>`).join('')}</div>
+ <div id="pad"><button id="bA" class="big" title="Jump (Space)">A</button><button id="bB" title="Attack (Z / click), hold to break">B</button>
+ <button id="bX" title="Interact (X)">X</button><button id="bY" title="Use / Place (U / right click)">Y</button></div>
+ <div id="minis"><button id="bSpr" title="Sprint toggle (Ctrl)">🏃</button><button id="bCr" title="Crouch (C)">🧎</button><button id="bEm" title="Emote (V)">😀</button><button id="bCh" title="Quick chat (T)">💬</button></div>
+ <div id="plist" class="panel" style="display:none"></div>`;
+ const hearts=$('hearts');function drawHP(){hearts.innerHTML=Array.from({length:MAX},(_,i)=>`<b class="${i<hp?'':'e'}">♥</b>`).join('')}drawHP();
+ const kill=t=>{const d=document.createElement('div');d.textContent=t;$('kfeed').prepend(d);setTimeout(()=>d.remove(),5000);while($('kfeed').children.length>4)$('kfeed').lastChild.remove()};
+ // registered targets (creatures, signs, contraptions, gates): features call G.combat.addTarget({pos|obj,radius,name,kind,onHit,onInteract})
+ const targets=new Set();
+ const tpos=t=>t.pos||(t.obj&&t.obj.position)||(t.mesh&&t.mesh.position);
+ function aim(){const d=new V3();camera.getWorldDirection(d);const eye=camera.position;let best=null,bd=REACH;
+  const test=(p,r,o)=>{if(!p)return;const c=new V3(p.x,p.y+(o.kind=='player'?1:0),p.z),v=c.clone().sub(eye),dist=v.length();if(dist>REACH+r)return;
+   const along=v.dot(d);if(along<0)return;const off=v.clone().sub(d.clone().multiplyScalar(along)).length();if(off<r+.5&&dist<bd+r){bd=dist;best=o}};
+  for(const [id,o] of others)if(o.target)test(o.target,.6,{kind:'player',id,name:o.target.name,avatar:o});
+  for(const t of targets)test(tpos(t),t.radius||.6,t);return best}
+ G.combat={get hp(){return hp},max:MAX,targets,aim,
+  addTarget(t){targets.add(t);return()=>targets.delete(t)},
+  heal(n=MAX){hp=Math.min(MAX,hp+n);drawHP()},
+  damage(target,amount=1,kb){if(target==null||target=='me'||target==G.net.id)return hurt(amount,kb,null);
+   if(typeof target=='string'){const o=others.get(target);G.net.send({t:'mp',k:'hit',to:target,a:amount,kb:kb||[0,3,0],by:G.name});return}
+   if(target.kind=='player')return G.combat.damage(target.id,amount,kb);try{target.onHit&&target.onHit(amount,G.net.id)}catch(e){console.error(e)}}};
+ function hurt(a,kb,by){const now=performance.now();if(now<inv||hp<=0)return;inv=now+700;hp=Math.max(0,hp-a);drawHP();lastHitBy=by;
+  if(kb)me.vel.add(new V3().fromArray(kb));me.fallStart=null;document.body.classList.add('hurt');setTimeout(()=>document.body.classList.remove('hurt'),200);
+  if(hp<=0){G.net.send({t:'mp',k:'kill',v:G.name,by});kill((by||'?')+' ⚔ '+G.name);G.emit('death',by?'player':'damage')}}
+ G.on('death',()=>{hp=MAX;inv=performance.now()+1500;setTimeout(drawHP,20)});
+ G.net.on('mp',m=>{const o=others.get(m.from);
+  if(m.k=='hit')hurt(m.a,m.kb,m.by);
+  else if(m.k=='kill')kill(m.by+' ⚔ '+m.v);
+  else if(m.k=='sw'&&o){o.g.rotation.x=-.35;setTimeout(()=>o.g.rotation.x=0,180)}
+  else if(m.k=='em'&&o)bubble(o,m.e,m.dance);
+  else if(m.k=='greet')G.toast('👋 '+m.n+' says hi!');});
+ // name tags with health bars + emote bubbles on remote avatars
+ const bg=new THREE.SpriteMaterial({color:0x000000,depthTest:false,opacity:.6,transparent:true});
+ G.on('playerJoin',(id,o)=>{const b=new THREE.Sprite(bg);b.scale.set(1.2,.12,1);b.position.y=2.02;const f=new THREE.Sprite(new THREE.SpriteMaterial({color:0x44ff66,depthTest:false}));
+  f.center.set(0,.5);f.scale.set(1.16,.08,1);f.position.set(-.58,2.02,0);o.g.add(b,f);o.bar=f});
+ function bubble(o,txt,dance){if(o.em)o.g.remove(o.em);const l=label(txt,'#ffd23f');l.position.y=2.75;o.g.add(l);o.em=l;o.dance=dance?performance.now()+3000:0;
+  clearTimeout(o.emT);o.emT=setTimeout(()=>{o.g.remove(l);if(o.em==l)o.em=null},3200)}
+ G.on('tick',(dt,now)=>{for(const [,o] of others){const t=o.target;if(!t)continue;if(o.bar){const r=Math.max(0,(t.hp??MAX)/MAX);o.bar.scale.x=1.16*r;o.bar.material.color.setHex(r>.5?0x44ff66:r>.25?0xffcc33:0xff4444)}
+  o.g.scale.y=t.cr?.75:1;if(o.dance&&now<o.dance)o.g.rotation.y+=dt*8}});
+ // actions
+ let swingT=0;mp.attack=function(fromClick){const now=performance.now();if(now<swingT)return true;const t=aim();
+  if(!t&&fromClick)return false;swingT=now+350;G.net.send({t:'mp',k:'sw'});const ev={target:t,hit:t?null:G.raycast(4)};G.emit('attack',ev);
+  if(t&&!ev.cancel){const d=new V3();camera.getWorldDirection(d);d.y=0;d.normalize().multiplyScalar(7);d.y=4;G.combat.damage(t,1,d.toArray())}return !!t};
+ mp.interact=function(){const t=aim(),h=G.raycast(5),ev={target:t,hit:h,type:t?t.kind||'target':h?'block':'none'};G.emit('interact',ev);if(ev.handled)return;
+  if(t&&t.onInteract){try{t.onInteract(G.net.id)}catch(e){console.error(e)}}
+  else if(t&&t.kind=='player'){G.net.send({t:'mp',k:'greet',to:t.id,n:G.name});G.toast('👋 You greeted '+t.name)}};
+ // Use slot: features claim it; last claim wins; unclaimed = place block
+ const uses=[];G.ui.setUse=function(o){uses.push(o);drawUse();return()=>{const i=uses.indexOf(o);if(i>=0)uses.splice(i,1);drawUse()}};
+ G.ui.clearUse=o=>{const i=uses.indexOf(o);if(i>=0)uses.splice(i,1);drawUse()};
+ function drawUse(){const u=uses[uses.length-1],b=$('bY');b.textContent=u?u.icon:'Y';b.title=u?u.label:'Place block';b.classList.toggle('on',!!u)}
+ mp.use=()=>{const u=uses[uses.length-1];if(u){try{u.onPress()}catch(e){console.error(e)}}else G.placeBlock()};
+ const emote=(e)=>{const E={wave:'👋',dance:'💃',laugh:'😂',thumbs:'👍'},txt=E[e]||e;G.net.send({t:'mp',k:'em',e:txt,dance:e=='dance'?1:0});G.toast('You: '+txt,1200);G.emit('emote',e)};
+ mp.emote=emote;
+ const PH=['Hi! 👋','Follow me!','Help!','GG 🏆','Nice build!','Race? 🏁','Fight me ⚔','Thanks!','Over here!','brb'];
+ const press=(id,fn,up)=>{const b=$(id);b.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();b.classList.add('dn');fn()});
+  const u=e=>{b.classList.remove('dn');up&&up()};b.addEventListener('pointerup',u);b.addEventListener('pointercancel',u);b.addEventListener('pointerleave',u)};
+ press('bA',()=>input.jump=true,()=>input.jump=false);
+ let brk=null;press('bB',()=>{mp.attack();brk=setTimeout(function rep(){G.breakBlock();brk=setTimeout(rep,450)},450)},()=>clearTimeout(brk));
+ press('bX',mp.interact);press('bY',mp.use);
+ const tog=(k,id)=>{mp[k]=!mp[k];$(id).classList.toggle('on',mp[k])};
+ press('bSpr',()=>tog('sprint','bSpr'));press('bCr',()=>tog('crouch','bCr'));
+ const emPanel=()=>G.ui.panel(['👋 wave','💃 dance','😂 laugh','👍 thumbs'],o=>emote(o.split(' ')[1]));
+ const chPanel=()=>G.ui.panel(PH,p=>{G.net.send({t:'mp',k:'em',e:p});G.toast('You: '+p,1500)});
+ press('bEm',emPanel);press('bCh',chPanel);
+ G.on('kbd',k=>{if(k=='z')mp.attack();else if(k=='x')mp.interact();else if(k=='u')mp.use();else if(k=='c')tog('crouch','bCr');else if(k=='Control')tog('sprint','bSpr');else if(k=='v')emPanel();else if(k=='t')chPanel()});
+ // D-pad (8-way) with joystick fallback
+ const dp=$('dpad');let dpId=null;const setCtl=c=>{localStorage.bvCtl=c;G._dpad=false;document.body.classList.toggle('joy',c=='joy')};setCtl(localStorage.bvCtl||'dpad');
+ function dmove(e){const r=dp.getBoundingClientRect(),dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2;
+  if(Math.hypot(dx,dy)<12){input.f=input.s=0}else{const a=Math.round(Math.atan2(dy,dx)/(Math.PI/4));const s=Math.round(Math.cos(a*Math.PI/4)),f=-Math.round(Math.sin(a*Math.PI/4));input.f=f;input.s=s}
+  [...dp.children].forEach(i=>{const k=i.dataset.k;i.classList.toggle('on',(k.includes('u')&&input.f>0)||(k.includes('d')&&input.f<0)||(k.includes('l')&&input.s<0)||(k.includes('r')&&input.s>0))})}
+ dp.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();dpId=e.pointerId;dp.setPointerCapture(e.pointerId);G._dpad=true;dmove(e)});
+ dp.addEventListener('pointermove',e=>{if(e.pointerId==dpId)dmove(e)});
+ const dend=e=>{if(e.pointerId!=dpId)return;dpId=null;G._dpad=false;input.f=input.s=0;[...dp.children].forEach(i=>i.classList.remove('on'))};
+ dp.addEventListener('pointerup',dend);dp.addEventListener('pointercancel',dend);
+ // players-online pill -> list with teleport, invite, controls setting
+ const pl=$('plist'),net=$('net');net.classList.add('pill');
+ const hex=c=>'#'+(c||0xffffff).toString(16).padStart(6,'0');
+ const esc=s=>String(s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+ function drawList(){pl.innerHTML=`<h3>Players online (${others.size+1})</h3><div class="pr"><i style="background:${hex(G.color)}"></i>${esc(G.name)} (you) ${'♥'.repeat(Math.ceil(hp/2))}</div>`+
+  [...others].map(([id,o])=>`<div class="pr"><i style="background:${hex(o.target&&o.target.color)}"></i>${esc(o.target&&o.target.name)}<button data-tp="${esc(id)}">Teleport</button></div>`).join('')+
+  `<div class="row"><button id="inv">🔗 Invite friends</button><button id="ctl">Controls: ${localStorage.bvCtl=='joy'?'Joystick':'D-pad'}</button><button id="plx">✕</button></div>`}
+ net.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();if(pl.style.display=='none'){drawList();pl.style.display='flex'}else pl.style.display='none'});
+ pl.addEventListener('pointerdown',async e=>{e.stopPropagation();const b=e.target;
+  if(b.dataset.tp){const o=others.get(b.dataset.tp);if(o&&o.target){me.pos.set(o.target.x+1,o.target.y+1,o.target.z);me.vel.set(0,0,0);me.fallStart=null;G.toast('Teleported to '+o.target.name)}pl.style.display='none'}
+  else if(b.id=='inv'){const url=location.origin+location.pathname;try{if(navigator.share){await navigator.share({title:'Blockverse',text:'Come play Blockverse with me!',url})}else{await navigator.clipboard.writeText(url);G.toast('Link copied!')}}catch(_){G.toast(url,4000)}}
+  else if(b.id=='ctl'){setCtl(localStorage.bvCtl=='joy'?'dpad':'joy');drawList()}
+  else if(b.id=='plx')pl.style.display='none'})}
 // ---- start
 $('nick').value=localStorage.bvName||'';
 async function start(){G.name=($('nick').value.trim()||'Player'+(Math.random()*999|0)).slice(0,14);localStorage.bvName=G.name;
