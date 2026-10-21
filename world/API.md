@@ -47,3 +47,30 @@ Each feature is `js/features/<name>.js` and exports `default { name, init(G) }`.
 - Messages are batched into Nostr ephemeral events (kind 20420, tag `t=blockverse-io-w1`) about every 220 ms and published to 4 free public relays. Duplicates are dropped by event id.
 - A newcomer sends `hello`, and a random existing peer answers with a `sync` containing up to 1500 block edits, the kept feature log and the time of day.
 - Block edits are also flushed every 20 s by the leader (the lowest peer id) to ntfy.sh, and loaded from the last 12 h on start, so the world persists after everyone leaves, for up to about 12 h.
+
+## Controls (core-owned)
+- Touch: 8-way D-pad bottom-left (joystick available via the players list → "Controls"), drag right side to look. Right cluster: **A** Jump, **B** Attack (tap = swing, hold = break block every 450 ms), **X** Interact, **Y** Use slot (place block when unclaimed). Small toggles: 🏃 Sprint, 🧎 Crouch, 😀 Emote, 💬 Quick chat. ☰ tray unchanged.
+- Desktop: WASD/arrows, Space jump, click = attack if a player/target is in reach else break, right click place, **Z** attack, **X** interact, **U** use, **C** crouch, **Ctrl** sprint, **V** emotes, **T** quick chat. Core no longer binds anything else; features already use b f g l q e r Shift.
+- `G.mp = {sprint, crouch, attack(), interact(), use(), emote(name)}`. Sprint ×1.6 and crouch ×0.45 multiply on top of `G.player.speedMul`.
+
+## Combat
+- `G.combat.hp` (0–10, shown as 10 hearts), `G.combat.max`, `G.combat.heal(n)`.
+- `G.combat.damage(target, amount=1, kb?)`: `target` is a player id, `'me'`, an `aim()` result, or a registered target. Player hits are synced (directed message), apply knockback `kb=[x,y,z]` and 0.7 s invulnerability. At 0 hp core fires `death('player'|'damage')` (so bloodstains still work), resets hp, and shows a kill-feed toast to everyone.
+- `G.combat.addTarget({pos|obj|mesh, radius, name, kind, onHit(amount, byId), onInteract(byId)})` returns a remover. Register creatures, signs, contraptions or race gates so B and X can aim at them.
+- `G.combat.aim()` returns the nearest player/target in front within 3.6 blocks (`{kind:'player',id,name,avatar}` or your target object), or `null`.
+
+## Events (new)
+- `attack(ev)`: `ev = {target, hit}`. `target` as from `aim()` or `null`; `hit` is a `G.raycast(4)` block when there's no target. Set `ev.cancel = true` to stop core applying damage.
+- `interact(ev)`: `ev = {type:'player'|'block'|'none'|<target.kind>, target, hit}`. Set `ev.handled = true` to stop the default (calling `target.onInteract`, or greeting a player).
+- `emote(name)` (local), `playerJoin(id, other)`.
+
+## Use slot
+- `G.ui.setUse({icon, label, onPress})` claims the **Y** button and returns a release function (`G.ui.clearUse(obj)` works too). The last claim wins, and releasing falls back to the previous claim, then to place block. Claim it when your context becomes relevant (e.g. near your contraption) and release it when you leave.
+
+## Reserved net fields (do not use these in your messages)
+- `G.net.send(featureId, msg)` overwrites `msg.t` with the feature id and `msg.from` with your id. Core also reads these fields on every message:
+  - `t`: message type / feature id. Core-owned values: `set hello sync pos bye push paint state mp`, so don't name a feature any of these.
+  - `from`: sender id (always overwritten).
+  - `to`: if set, only that peer id processes the message (everyone else drops it). Only set it for directed messages.
+  - `keep`: any truthy value stores the message and replays it to late joiners.
+- In `sync` messages core uses the fields `edits kl time`, and in `pos` packets `x y z yaw name color ex hp cr`. Put per-player feature data in `G.player.extra` (`ex`), not at the top level.
