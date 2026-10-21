@@ -18,14 +18,14 @@ export default{name:'fallguys',init(G){const T=G.THREE;const spinners=new Map(),
   [15,25,35].forEach(i=>{const [x,z]=P(i+.5,0);const sl={id:G.net.id+':'+(cid++),cx:x+.5,cz:z+.5,y,w:6,d:2.5,rot:me.yaw,fx:f.x,fz:f.z};addSlime(sl);share('slime',{sl})});
   const cps=[2,10,20,30].map(i=>P(i,0));const [fx,fz]=P(41,0);
   G.setState('fallguys',{course:{cps,fx,fz,y,len:41,ox:o.x,oz:o.z,dx:f.x,dz:f.z}});G.toast('Course built! Tap 🏁 to call a race.')});
- G.ui.addButton('🏁','Call a race',()=>{const c=course();if(!c)return G.toast('Build a course first 🏗️');const id=G.net.id+':'+Date.now();G.net.send('fallguys',{k:'call',id,by:G.name||'player'});onCall({id,by:G.name},true)});
+ G.ui.addButton('🏁','Call a race',()=>{const c=course();if(!c)return G.toast('Build a course first 🏗️');const id=G.net.id+':'+Date.now();const at=Date.now()+5000;G.net.send('fallguys',{k:'call',id,by:G.name||'player',at});onCall({id,by:G.name,at},true)});
  function course(){return(G.state('fallguys')||{}).course}
  function progress(p,c){return Math.max(0,(p.x-c.ox)*c.dx+(p.z-c.oz)*c.dz)}
  function onCall(m,mine){const c=course();if(!c||race)return;const [sx,sz]=c.cps[0];const p=G.player.pos;
   if(!mine&&Math.hypot(p.x-sx,p.z-sz)>60){G.toast('🏁 '+m.by+' called a race! Get near the start to join');return}
-  call={id:m.id,end:performance.now()+5000};G.player.pos.set(sx+.5+(Math.random()*4-2),c.y+2,sz+.5);G.player.vel.set(0,0,0);G.pauseInput()}
+  call={id:m.id,end:performance.now()+Math.max(1000,Math.min(8000,(m.at||Date.now()+5000)-Date.now()))};G.player.pos.set(sx+.5+(Math.random()*4-2),c.y+2,sz+.5);G.player.vel.set(0,0,0);G.pauseInput()}
  G.net.on('fallguys',m=>{if(m.k=='spin')addSpinner(m.s);else if(m.k=='slime')addSlime(m.sl);else if(m.k=='call')onCall(m,false);
-  else if(m.k=='fin'&&race&&m.rid==race.id){race.fins.push(m);G.toast((m.place==1?'🥇':m.place==2?'🥈':m.place==3?'🥉':'🏅')+' '+m.name+' '+m.t+'s')}});
+  else if(m.k=='fin'&&race&&m.rid==race.id){race.fins.push(m);G.toast((m.place==1?'🥇':m.place==2?'🥈':m.place==3?'🥉':'🏅')+' '+m.who+' '+m.secs+'s')}});
  G.on('tick',(dt,now)=>{const t=now/1000,p=G.player.pos;
   for(const s of spinners.values()){s.g.rotation.y=t*s.sp;
    if(Math.abs(p.y-(s.y+1))<1.6&&Math.hypot(p.x-s.g.position.x,p.z-s.g.position.z)<3.6){const a=s.g.rotation.y,dir=new T.Vector3(Math.cos(a),0,-Math.sin(a));
@@ -43,7 +43,7 @@ export default{name:'fallguys',init(G){const T=G.THREE;const spinners=new Map(),
    let ahead=0,n=1;for(const o of G.others.values()){const fg=o.target&&o.target.ex&&o.target.ex.fg;if(fg&&fg.r==race.id){n++;if(fg.d>d||fg.fin)ahead++}}
    hud.textContent='⏱ '+el.toFixed(1)+'s · P'+(ahead+1)+'/'+n;
    if(Math.hypot(p.x-c.fx-.5,p.z-c.fz-.5)<4&&Math.abs(p.y-c.y-1)<1.5){const place=race.fins.length+1,tt=el.toFixed(1);race.done=true;G.player.extra.fg={r:race.id,d:999,fin:1};
-    G.net.send('fallguys',{k:'fin',rid:race.id,name:G.name||'player',t:tt,place});
+    G.net.send('fallguys',{k:'fin',rid:race.id,who:G.name||'player',secs:tt,place});
     G.toast((place==1?'🥇 Winner! ':'🏆 Qualified! P'+place+' ')+tt+'s'+(!best()||el<best()?' · new best':''),3000);if(!best()||el<best())localStorage.bvBestRace=el.toFixed(1);
     setTimeout(()=>{hud.textContent='';delete G.player.extra.fg;race=null},4000)}
    if(p.y<c.y-6){const [x,z]=c.cps[race.cp];p.set(x+.5,c.y+2,z+.5);G.player.vel.set(0,0,0);G.player.fallStart=null;G.toast('Oof! Back to checkpoint '+race.cp,900)}
