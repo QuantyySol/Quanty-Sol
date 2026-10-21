@@ -26,3 +26,12 @@ canvas{display:block}
 .meter{position:fixed;left:8px;width:110px;height:10px;background:rgba(0,0,0,.5);border:1px solid #fff;z-index:6;border-radius:5px;overflow:hidden}
 .meter i{display:block;height:100%}
 @media (hover:hover) and (pointer:fine){#stick,#acts{display:none}}
+#info{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100vw - 110px)}
+#trayT,#trayPin{display:none;position:fixed;bottom:calc(200px + env(safe-area-inset-bottom));width:48px;height:48px;border-radius:50%;border:2px solid rgba(0,0,0,.5);background:rgba(20,20,30,.6);color:#fff;font-size:20px;z-index:7}
+#trayT{right:20px}#trayPin{right:76px;background:rgba(255,255,255,.25)}#trayPin.on{background:rgba(255,210,63,.7)}
+body.tray #trayT{display:block}body.tray #trayPin:not([style*="none"]){display:block}
+body.tray #feat{display:none;top:auto;right:14px;bottom:calc(256px + env(safe-area-inset-bottom));flex-direction:row;flex-wrap:wrap;width:104px;gap:8px;max-height:calc(100% - 330px);padding:6px;background:rgba(20,20,30,.55);border-radius:14px}
+body.tray #feat button{width:42px;height:42px}
+body.tray.trayOpen #feat{display:flex}body.trayOpen #trayT{background:rgba(255,210,63,.7)}
+#net{white-space:nowrap}@media (max-width:600px){#info{max-width:calc(100vw - 200px)}}
+body.tray.trayOpen #feat{display:grid;grid-template-columns:42px 42px;width:auto}body.tray #feat button{margin:0;flex:none}
