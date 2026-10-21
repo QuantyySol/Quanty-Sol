@@ -1,6 +1,6 @@
-// Splatoon-style ink turf: neon team colors, spray ink onto block tops (shared G.paint layer, owner 'splat-<team>'), ink tank that
+// Splatoon-style ink turf: neon team colors, spray ink onto the block face you hit (any of 6 faces) (shared G.paint layer, owner 'splat-<team>'), ink tank that
 // refills fast on your own color, swim dash through own ink, live turf meter + optional 3-minute turf rounds, painted turf glows at night.
-// Desktop: hold F (or toggle 🔫) to spray where you aim, Q = swim dash. Touch: left stick moves, hold+drag the big ink button to aim and spray.
+// Desktop: hold F (or toggle 🔫) to spray where you aim, Q / Shift = swim dash. Touch: left stick moves, hold+drag the big ink button to aim and spray.
 export default{name:'splat',init(G){const T=G.THREE,me=G.player;
  const TEAMS=[0xff2bd6,0x19f0ff],TN=['pink','cyan'],CSS=['#ff2bd6','#19f0ff'],OWN=TN.map(n=>'splat-'+n),ROUND=180;
  // ---- team: join the smaller team among players already here
@@ -16,12 +16,12 @@ export default{name:'splat',init(G){const T=G.THREE,me=G.player;
  .spl-fire{position:fixed;right:84px;bottom:calc(126px + env(safe-area-inset-bottom));width:60px;height:60px;border-radius:50%;z-index:6;font-size:24px;color:#fff;touch-action:none;
   border:2px solid var(--c);background:color-mix(in srgb,var(--c) 30%,rgba(0,0,0,.35));box-shadow:0 0 12px var(--c)}
  .spl-fire.on{background:color-mix(in srgb,var(--c) 70%,transparent);box-shadow:0 0 22px var(--c)}
- #feat button.spl-b{width:44px;height:44px}
+ body:not(.tray) #feat button.spl-b{width:44px;height:44px}
  @media (hover:hover) and (pointer:fine){.spl-fire{display:none}}`;document.head.appendChild(st);
  const turf=document.createElement('div');turf.className='spl-turf';turf.title='Team turf (tap to switch team)';turf.innerHTML='<i></i><i></i><b></b>';document.body.appendChild(turf);
  // ---- buttons
  const bSpray=G.ui.addButton('🔫','Ink spray toggle (hold F)',()=>{sprayTog=!sprayTog;bSpray.classList.toggle('on',sprayTog)});bSpray.classList.add('spl-b');
- const bSwim=G.ui.addButton('🦑','Swim dash through your ink (Q)',()=>dash());bSwim.classList.add('spl-b');
+ const bSwim=G.ui.addButton('🦑','Swim dash through your ink (Q / Shift)',()=>dash());bSwim.classList.add('spl-b');
  const bRound=G.ui.addButton('⏱','Start a 3-minute turf round',()=>startRound());bRound.classList.add('spl-b');
  const fire=document.createElement('button');fire.className='spl-fire';fire.textContent='💦';fire.setAttribute('aria-label','Hold to spray ink, drag to aim');(document.getElementById('hud')||document.body).appendChild(fire);
  let fid=null,fx=0,fy=0;fire.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();fid=e.pointerId;fx=e.clientX;fy=e.clientY;try{fire.setPointerCapture(fid)}catch(_){}sprayBtn=true;fire.classList.add('on')});
@@ -30,7 +30,7 @@ export default{name:'splat',init(G){const T=G.THREE,me=G.player;
  function setTeam(t){team=t;me.extra.team=t;fire.style.setProperty('--c',CSS[t]);inkBox.firstChild.style.background=CSS[t];bSpray.title='Ink spray, team '+TN[t]+' (hold F)';G.toast('🎨 You are team '+TN[t].toUpperCase(),1600)}
  setTeam(team);let sprayed=false;setTimeout(()=>{if(sprayed)return;const c=[0,0];G.others.forEach(o=>{const t=o.target&&o.target.ex&&o.target.ex.team;if(t===0||t===1)c[t]++});if(c[team]>c[1-team])setTeam(1-team)},6000);turf.addEventListener('pointerdown',e=>{e.stopPropagation();setTeam(1-team)});
  // ---- keys (hold F = spray). kbd gives keydown; listen for keyup ourselves
- G.on('kbd',k=>{if(k=='f')sprayKey=true;if(k=='q')dash()});
+ G.on('kbd',k=>{if(k=='f')sprayKey=true;if(k=='q'||k=='Shift')dash()});
  addEventListener('keyup',e=>{if(e.key.toLowerCase()=='f')sprayKey=false});addEventListener('blur',()=>{sprayKey=false});
  // ---- spray particles (pooled), also drawn for other players from their extra.sp aim point
  const pg=new T.BoxGeometry(.13,.13,.13),pm=TEAMS.map(c=>new T.MeshBasicMaterial({color:c,transparent:true,opacity:.95})),P=[];
@@ -46,6 +46,11 @@ export default{name:'splat',init(G){const T=G.THREE,me=G.player;
  // ---- night glow: brighten team materials at night (paint materials are unlit)
  function glow(){const night=G.isNight&&G.isNight(),k=night?.85+.15*Math.sin(performance.now()/450):0;TEAMS.forEach(c=>{const m=G.paint.materials&&G.paint.materials[c];if(!m)return;
    m.opacity=night?1:.82;m.color.setHex(c);if(night)m.color.lerp(new T.Color(0xffffff),.12*k)})}
+ // splatter on the face you hit (walls, ceilings, floors): 3x3 in the face plane, only on exposed faces of solid blocks
+ function splat(h){const f=G.paint.faceFromNormal(h.n),n=h.n||[0,1,0],ax=n[0]?[1,2]:n[1]?[0,2]:[0,1];
+  for(let a=-1;a<=1;a++)for(let c=-1;c<=1;c++){if((a||c)&&Math.random()<.4)continue;const p=[h.x,h.y,h.z];p[ax[0]]+=a;p[ax[1]]+=c;
+   if(!G.world.solid(G.world.getBlock(p[0],p[1],p[2])))continue;if(G.world.solid(G.world.getBlock(p[0]+n[0],p[1]+n[1],p[2]+n[2])))continue;
+   G.paint.set(p[0],p[1],p[2],TEAMS[team],OWN[team],f)}}
  const tmp=new T.Vector3();
  G.on('tick',(dt,now)=>{const u=under(),own=u&&u.owner==OWN[team],enemy=u&&u.owner&&OWN.includes(u.owner)&&!own;
   swimCd=Math.max(0,swimCd-dt);if(swim>0){swim-=dt;if(swim<=0)bSwim.classList.remove('on')}
@@ -53,8 +58,8 @@ export default{name:'splat',init(G){const T=G.THREE,me=G.player;
   ink=Math.min(1,ink+dt*(swim>0?.6:own?.45:.06));
   const spraying=(sprayKey||sprayBtn||sprayTog)&&!G.frozen&&ink>.02;me.extra.sp=null;
   if(spraying){acc+=dt;const h=G.raycast(12);if(h){sprayed=true;me.extra.sp=[h.x,h.y,h.z];if(acc>.08){acc=0;ink-=.022;
-    for(let a=-1;a<=1;a++)for(let c=-1;c<=1;c++){if((a||c)&&Math.random()<.4)continue;const x=h.x+a,z=h.z+c,y=G.world.height(x,z);if(Math.abs(y-h.y)<3)G.paint.set(x,y,z,TEAMS[team],OWN[team])}
-    puff(tmp.set(me.pos.x,me.pos.y+1.3,me.pos.z),new T.Vector3(h.x+.5,h.y+1,h.z+.5),team)}}}else if(ink<=.02&&(sprayKey||sprayBtn||sprayTog))G.toast('Out of ink: stand on your color to refill',900);
+    splat(h)
+    puff(tmp.set(me.pos.x,me.pos.y+1.3,me.pos.z),new T.Vector3(h.x+.5+(h.n?h.n[0]*.55:0),h.y+.5+(h.n?h.n[1]*.55:.5),h.z+.5+(h.n?h.n[2]*.55:0)),team)}}}else if(ink<=.02&&(sprayKey||sprayBtn||sprayTog))G.toast('Out of ink: stand on your color to refill',900);
   // other players' spray
   G.others.forEach(o=>{const ex=o.target&&o.target.ex;if(ex&&ex.sp&&Math.random()<dt*10&&o.g)puff(o.g.position.clone().add(new T.Vector3(0,1.3,0)),new T.Vector3(ex.sp[0]+.5,ex.sp[1]+1,ex.sp[2]+.5),ex.team?1:0)});
   P.forEach(p=>{if(p.t<=0)return;p.t-=dt;const k=1-p.t/p.d;p.m.position.lerpVectors(p.a,p.b,k);p.m.position.y+=Math.sin(k*Math.PI)*.6;if(p.t<=0)p.m.visible=false});
