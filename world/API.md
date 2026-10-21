@@ -84,3 +84,14 @@ Each feature is `js/features/<name>.js` and exports `default { name, init(G) }`.
 - **`G.hunger`**: `value` (0–10, shown as 🍗 under the hearts), `max`, `set(v)`, `eat(id)`. It drains 0.5 every 45 s (3× faster while sprinting and moving). At 9 or more it regenerates 1 heart every 4 s; at 0 it deals 1 damage every 4 s. Holding Y (or right click) with food selected eats it in 1.6 s. A selected food beats a claimed Use slot. Events: `eat(id)`.
 - The attack cooldown is 0.6 s, and the held sword's `dmg` replaces the default 1.
 - Note: E now opens the backpack. ultrahand.js also uses E to rotate a held part, so both happen while holding one.
+
+## Test rooms
+- `?room=NAME` (a–z, 0–9, `_`, `-`, max 24) moves everything to a separate world. The relay tag becomes `blockverse-io-w1-room-NAME`, and the ntfy persistence topic and kept log are separate too. An orange "test room: NAME" badge appears above the D-pad. `G.net.room` is the name, or `null` on the public world. With no param the public world is unchanged. Bots, please test in a room (e.g. `?room=qa&autoplay&name=Bot1`), not on the public spawn.
+
+## Kept log (late-joiner replay)
+- `G.net.send(type, data, {keep:1, replace:'id', maxAge:ms})`. The old style `{...data, keep:1}` still works.
+  - `replace`: a newer kept message with the same `type` and replace id removes older ones, so use it for state that only needs its latest value (per player, per object).
+  - `maxAge`: the message expires that many ms after sending and isn't replayed after that.
+  - `G.net.keepCap(type, n)` keeps only the newest `n` kept messages of that type.
+- These rules are applied when sending, on receive, and when building the `sync` snapshot (the newest 250 live entries). The ntfy block-edit persistence also dedupes by coordinate, so only the latest edit per block is flushed.
+- New reserved message fields: `rep` (replace id), `exp` (expiry, epoch ms) and `kid` (kept-message id, used to drop duplicates between the live copy and the snapshot copy). Caps are per client, so call `keepCap` in your feature's `init` so every client applies it.
