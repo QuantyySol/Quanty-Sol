@@ -88,7 +88,7 @@ G.raycast=function(max=7){const o=camera.position,d=new THREE.Vector3();camera.g
   const a=tm[0]<tm[1]?(tm[0]<tm[2]?0:2):(tm[1]<tm[2]?1:2);t=tm[a];tm[a]+=td[a];if(a==0)x+=st[0];else if(a==1)y+=st[1];else z+=st[2];n=[0,0,0];n[a]=-st[a]}return null};
 G.breakBlock=function(){const h=G.raycast();if(!h)return;if(G.emit('beforeBreak',h),h.cancel)return;set(h.x,h.y,h.z,0);G.emit('broke',h)};
 G.placeBlock=function(){const h=G.raycast();if(!h)return;const x=h.x+h.n[0],y=h.y+h.n[1],z=h.z+h.n[2];
- const p=me.pos;if(x==Math.floor(p.x)&&z==Math.floor(p.z)&&(y==Math.floor(p.y)||y==Math.floor(p.y+1)))return;set(x,y,z,HOT[me.sel])};
+ const p=me.pos;if(x==Math.floor(p.x)&&z==Math.floor(p.z)&&(y==Math.floor(p.y)||y==Math.floor(p.y+1)))return;const nb=G.inv?G.inv.takeSel():HOT[me.sel];if(nb)set(x,y,z,nb)};
 // highlight
 const hl=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1.01,1.01,1.01)),new THREE.LineBasicMaterial({color:0}));scene.add(hl);
 // ---- UI
@@ -98,7 +98,7 @@ G.ui={button(label,title,fn){const b=document.createElement('button');b.textCont
  meter(top,color){const m=document.createElement('div');m.className='meter';m.style.top=top+'px';m.innerHTML=`<i style="background:${color};width:100%"></i>`;document.body.appendChild(m);return v=>m.firstChild.style.width=Math.max(0,Math.min(100,v*100))+'%'},
  panel(opts,cb){const p=document.createElement('div');p.className='panel';opts.forEach(o=>{const b=document.createElement('button');b.textContent=o;b.onpointerdown=e=>{e.stopPropagation();p.remove();cb(o)};p.appendChild(b)});
   const x=document.createElement('button');x.textContent='✕';x.onpointerdown=e=>{e.stopPropagation();p.remove()};p.appendChild(x);document.body.appendChild(p)}};
-function drawHot(){$('hotbar').innerHTML=HOT.map((b,i)=>`<div class="${i==me.sel?'sel':''}" data-i="${i}" style="background:#${BLOCKS[b].c.toString(16).padStart(6,'0')}" title="${BLOCKS[b].n}"></div>`).join('')}
+function drawHot(){if(G._drawHot)return G._drawHot();$('hotbar').innerHTML=HOT.map((b,i)=>`<div class="${i==me.sel?'sel':''}" data-i="${i}" style="background:#${BLOCKS[b].c.toString(16).padStart(6,'0')}" title="${BLOCKS[b].n}"></div>`).join('')}
 $('hotbar').addEventListener('pointerdown',e=>{e.stopPropagation();if(e.target.dataset.i){me.sel=+e.target.dataset.i;drawHot()}});
 // touch controls
 let stickId=null,lookId=null,lx=0,ly=0;const stick=$('stick'),knob=$('knob');
@@ -110,9 +110,9 @@ const endStick=e=>{if(e.pointerId==stickId){stickId=null;input.f=input.s=0;knob.
 stick.addEventListener('pointerup',endStick);stick.addEventListener('pointercancel',endStick);
 const cv=renderer.domElement;
 cv.addEventListener('pointerdown',e=>{if(G.capture&&G.capture.down(e))return;if(e.pointerType=='mouse'){if(document.pointerLockElement!=cv){cv.requestPointerLock?.();return}
-  if(e.button==0){if(!G.mp||!G.mp.attack(true))G.breakBlock()}else if(e.button==2)G.placeBlock();return}lookId=e.pointerId;lx=e.clientX;ly=e.clientY});
+  if(e.button==0){if(!G.mp.attack(true))G.surv.startBreak()}else if(e.button==2)G.mp.use();return}lookId=e.pointerId;lx=e.clientX;ly=e.clientY});
 cv.addEventListener('pointermove',e=>{if(G.capture&&G.capture.move(e))return;if(e.pointerId==lookId){look((e.clientX-lx)*.006,(e.clientY-ly)*.006);lx=e.clientX;ly=e.clientY}});
-cv.addEventListener('pointerup',e=>{if(G.capture&&G.capture.up(e))return;if(e.pointerId==lookId)lookId=null});
+cv.addEventListener('pointerup',e=>{if(G.capture&&G.capture.up(e))return;if(e.pointerType=='mouse'){G.surv.stopBreak();if(e.button==2)G.mp.useUp()}if(e.pointerId==lookId)lookId=null});
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('mousemove',e=>{if(document.pointerLockElement==cv)look(e.movementX*.0025,e.movementY*.0025)});
 function look(dx,dy){me.yaw-=dx;me.pitch=Math.max(-1.5,Math.min(1.5,me.pitch-dy))}
@@ -187,7 +187,7 @@ function frame(now){requestAnimationFrame(frame);let dt=Math.min(0.05,(now-last)
   o.g.position.lerp(new THREE.Vector3(t.x,t.y,t.z),Math.min(1,dt*10));o.g.rotation.y=t.yaw}
  posT+=dt;if(posT>0.1){posT=0;G.net.send({t:'pos',x:+me.pos.x.toFixed(2),y:+me.pos.y.toFixed(2),z:+me.pos.z.toFixed(2),yaw:+me.yaw.toFixed(2),name:G.name,color:G.color,ex:me.extra,hp:G.combat?G.combat.hp:10,cr:G.mp&&G.mp.crouch?1:0})}
  G.emit('tick',dt,now);
- $('info').textContent=`XYZ ${me.pos.x|0} ${me.pos.y|0} ${me.pos.z|0} · ${G.isNight()?'🌙':'☀️'} · ${BLOCKS[HOT[me.sel]].n}`+(G.infoExtra?' · '+G.infoExtra():'');
+ $('info').textContent=`XYZ ${me.pos.x|0} ${me.pos.y|0} ${me.pos.z|0} · ${G.isNight()?'🌙':'☀️'} · ${G.inv?G.inv.selName():''}`+(G.infoExtra?' · '+G.infoExtra():'');
  renderer.render(scene,camera)}
 function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}
 addEventListener('resize',resize);resize();requestAnimationFrame(frame);
@@ -287,25 +287,26 @@ G.on('tick',dt=>G.physics.step(dt));
  G.on('tick',(dt,now)=>{for(const [,o] of others){const t=o.target;if(!t)continue;if(o.bar){const r=Math.max(0,(t.hp??MAX)/MAX);o.bar.scale.x=1.16*r;o.bar.material.color.setHex(r>.5?0x44ff66:r>.25?0xffcc33:0xff4444)}
   o.g.scale.y=t.cr?.75:1;if(o.dance&&now<o.dance)o.g.rotation.y+=dt*8}});
  // actions
- let swingT=0;mp.attack=function(fromClick){const now=performance.now();if(now<swingT)return true;const t=aim();
-  if(!t&&fromClick)return false;swingT=now+350;G.net.send({t:'mp',k:'sw'});const ev={target:t,hit:t?null:G.raycast(4)};G.emit('attack',ev);
-  if(t&&!ev.cancel){const d=new V3();camera.getWorldDirection(d);d.y=0;d.normalize().multiplyScalar(7);d.y=4;G.combat.damage(t,1,d.toArray())}return !!t};
+ let swingT=0;mp.attack=function(fromClick){const now=performance.now();if(now<swingT)return !!aim();const t=aim();
+  if(!t&&fromClick)return false;swingT=now+600;G.net.send({t:'mp',k:'sw'});const ev={target:t,hit:t?null:G.raycast(4)};G.emit('attack',ev);
+  if(t&&!ev.cancel){const d=new V3();camera.getWorldDirection(d);d.y=0;d.normalize().multiplyScalar(7);d.y=4;const w=G.inv&&G.inv.held(),wd=w&&G.ITEMS[w.id]&&G.ITEMS[w.id].dmg||1;G.combat.damage(t,wd,d.toArray())}return !!t};
  mp.interact=function(){const t=aim(),h=G.raycast(5),ev={target:t,hit:h,type:t?t.kind||'target':h?'block':'none'};G.emit('interact',ev);if(ev.handled)return;
   if(t&&t.onInteract){try{t.onInteract(G.net.id)}catch(e){console.error(e)}}
   else if(t&&t.kind=='player'){G.net.send({t:'mp',k:'greet',to:t.id,n:G.name});G.toast('👋 You greeted '+t.name)}};
  // Use slot: features claim it; last claim wins; unclaimed = place block
- const uses=[];G.ui.setUse=function(o){uses.push(o);drawUse();return()=>{const i=uses.indexOf(o);if(i>=0)uses.splice(i,1);drawUse()}};
+ const uses=[];G.ui.setUse=function(o){if(o==null){uses.pop();drawUse();return()=>{}}uses.push(o);drawUse();return()=>{const i=uses.indexOf(o);if(i>=0)uses.splice(i,1);drawUse()}};
  G.ui.clearUse=o=>{const i=uses.indexOf(o);if(i>=0)uses.splice(i,1);drawUse()};
  function drawUse(){const u=uses[uses.length-1],b=$('bY');b.textContent=u?u.icon:'Y';b.title=u?u.label:'Place block';b.classList.toggle('on',!!u)}
- mp.use=()=>{const u=uses[uses.length-1];if(u){try{u.onPress()}catch(e){console.error(e)}}else G.placeBlock()};
+ mp.useUp=()=>{G.surv.stopEat();const u=mp._down;mp._down=null;if(u&&u.onRelease){try{u.onRelease()}catch(e){console.error(e)}}};
+ mp.use=()=>{if(G.surv.startEat())return;const u=uses[uses.length-1];if(u){mp._down=u;try{u.onPress&&u.onPress()}catch(e){console.error(e)}}else G.placeBlock()};
  const emote=(e)=>{const E={wave:'👋',dance:'💃',laugh:'😂',thumbs:'👍'},txt=E[e]||e;G.net.send({t:'mp',k:'em',e:txt,dance:e=='dance'?1:0});G.toast('You: '+txt,1200);G.emit('emote',e)};
  mp.emote=emote;
  const PH=['Hi! 👋','Follow me!','Help!','GG 🏆','Nice build!','Race? 🏁','Fight me ⚔','Thanks!','Over here!','brb'];
  const press=(id,fn,up)=>{const b=$(id);b.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();b.classList.add('dn');fn()});
   const u=e=>{b.classList.remove('dn');up&&up()};b.addEventListener('pointerup',u);b.addEventListener('pointercancel',u);b.addEventListener('pointerleave',u)};
  press('bA',()=>input.jump=true,()=>input.jump=false);
- let brk=null;press('bB',()=>{mp.attack();brk=setTimeout(function rep(){G.breakBlock();brk=setTimeout(rep,450)},450)},()=>clearTimeout(brk));
- press('bX',mp.interact);press('bY',mp.use);
+ press('bB',()=>{if(!mp.attack())G.surv.startBreak()},()=>G.surv.stopBreak());
+ press('bX',mp.interact);press('bY',mp.use,mp.useUp);
  const tog=(k,id)=>{mp[k]=!mp[k];$(id).classList.toggle('on',mp[k])};
  press('bSpr',()=>tog('sprint','bSpr'));press('bCr',()=>tog('crouch','bCr'));
  const emPanel=()=>G.ui.panel(['👋 wave','💃 dance','😂 laugh','👍 thumbs'],o=>emote(o.split(' ')[1]));
@@ -334,6 +335,85 @@ G.on('tick',dt=>G.physics.step(dt));
   else if(b.id=='inv'){const url=location.origin+location.pathname;try{if(navigator.share){await navigator.share({title:'Blockverse',text:'Come play Blockverse with me!',url})}else{await navigator.clipboard.writeText(url);G.toast('Link copied!')}}catch(_){G.toast(url,4000)}}
   else if(b.id=='ctl'){setCtl(localStorage.bvCtl=='joy'?'dpad':'joy');drawList()}
   else if(b.id=='plx')pl.style.display='none'})}
+// ---- survival: items, inventory (9 hotbar + 27 backpack), drops, hold-to-break hardness, hunger, eating, crafting
+{const V3=THREE.Vector3;
+ const ITEMS=G.ITEMS={100:{n:'stick',i:'🥢'},101:{n:'wood pickaxe',i:'⛏',tool:'pick',lv:2,st:1},102:{n:'stone pickaxe',i:'⛏',tool:'pick',lv:4,st:1,c:0x8a8a8a},
+  103:{n:'wood sword',i:'🗡',dmg:2,st:1},104:{n:'stone sword',i:'🗡',dmg:3,st:1,c:0x8a8a8a},110:{n:'apple',i:'🍎',food:3},111:{n:'bread',i:'🍞',food:5},112:{n:'wheat',i:'🌾'},113:{n:'cooked meat',i:'🍖',food:8},114:{n:'raw meat',i:'🥩',food:2}};
+ const NAMES=G.ITEM_IDS={stick:100,wood_pickaxe:101,stone_pickaxe:102,wood_sword:103,stone_sword:104,apple:110,bread:111,wheat:112,cooked_meat:113,raw_meat:114};
+ BLOCKS.forEach((b,i)=>{if(b)NAMES[b.n]=i});
+ const res=id=>typeof id=='string'&&NAMES[id]!=null?NAMES[id]:id,isBlock=id=>typeof id=='number'&&id>0&&id<100;
+ const item=id=>{id=res(id);return isBlock(id)?BLOCKS[id]&&{n:BLOCKS[id].n,c:BLOCKS[id].c,block:1}:ITEMS[id]||{n:String(id),i:'❔'}};
+ const HARD={1:.6,2:.5,4:.5,8:.3,7:.3,6:1.5,9:1.5,3:3,13:3,10:.4,11:.8,12:.5};
+ const PICK={3:1,13:1,10:1,12:1,6:.5,9:.5};// how much a pickaxe helps
+ const DROP=b=>b==1?[[2,1],Math.random()<.25&&[112,1]]:b==7?[Math.random()<.18?[110,1]:Math.random()<.5&&[7,1]]:b==10?[]:[[b,1]];
+ const MAXS=id=>item(id).st||64;
+ // inventory
+ let slots;try{slots=JSON.parse(localStorage.bvInv)}catch(_){}if(!Array.isArray(slots)||slots.length!=36)slots=Array.from({length:36},()=>null);
+ if(!localStorage.bvInv){slots[0]={id:9,n:16};slots[1]={id:110,n:3}}
+ const save=()=>{localStorage.bvInv=JSON.stringify(slots);drawHotI();if(bp.style.display!='none')drawBP()};
+ const inv=G.inv={slots,item,
+  get sel(){return me.sel},hotbar:()=>slots.slice(0,9),held:()=>slots[me.sel],
+  count(id){id=res(id);return slots.reduce((a,s)=>a+(s&&s.id==id?s.n:0),0)},
+  add(id,n=1){id=res(id);for(const s of slots)if(n&&s&&s.id==id&&s.n<MAXS(id)){const k=Math.min(n,MAXS(id)-s.n);s.n+=k;n-=k}
+   for(let i=0;i<36&&n;i++)if(!slots[i]){const k=Math.min(n,MAXS(id));slots[i]={id,n:k};n-=k}save();return n},// returns leftover
+  remove(id,n=1){id=res(id);if(inv.count(id)<n)return false;for(let i=35;i>=0&&n;i--){const s=slots[i];if(s&&s.id==id){const k=Math.min(n,s.n);s.n-=k;n-=k;if(!s.n)slots[i]=null}}save();return true},
+  takeSel(){const s=slots[me.sel];if(!s||!isBlock(s.id))return 0;s.n--;const id=s.id;if(!s.n)slots[me.sel]=null;save();return id},
+  selName(){const s=slots[me.sel];return s?item(s.id).n+(s.n>1?' ×'+s.n:''):'empty hand'},swap(a,b){[slots[a],slots[b]]=[slots[b],slots[a]];save()},
+  defineItem(id,o={}){if(typeof id=='string'&&NAMES[id]==null)NAMES[id]=id;id=res(id);if(isBlock(id))return id;
+   const old=ITEMS[id]||{};ITEMS[id]={...old,n:o.name||old.n||String(id).replace(/_/g,' '),i:o.icon??old.i,food:o.food??old.food,st:o.stack??old.st,c:o.color??old.c,dmg:o.dmg??old.dmg,tool:o.tool??old.tool,lv:o.lv??old.lv};
+   try{drawHotI()}catch(_){}return id}};
+ const cell=(s,i,cls='')=>{const it=s&&item(s.id);const bg=it&&it.c!=null?'#'+it.c.toString(16).padStart(6,'0'):'rgba(0,0,0,.35)';
+  return `<div class="${cls}" data-i="${i}" style="background:${bg}" title="${it?it.n:''}">${it&&it.i?'<em>'+it.i+'</em>':''}${s&&s.n>1?'<s>'+s.n+'</s>':''}</div>`};
+ function drawHotI(){$('hotbar').innerHTML=slots.slice(0,9).map((s,i)=>cell(s,i,i==me.sel?'sel':'')).join('')}
+ G._drawHot=drawHotI;drawHotI();
+ // backpack + crafting
+ const R=G.RECIPES=[{out:[9,4],in:[[6,1]]},{out:[100,4],in:[[9,2]]},{out:[101,1],in:[[9,3],[100,2]]},{out:[102,1],in:[[3,3],[100,2]]},
+  {out:[103,1],in:[[9,2],[100,1]]},{out:[104,1],in:[[3,2],[100,1]]},{out:[111,1],in:[[112,3]]},{out:[113,1],in:[[114,1],[12,0]]}];
+ const bp=document.createElement('div');bp.id='bp';bp.className='panel';bp.style.display='none';document.body.appendChild(bp);let pick=null;
+ const ok=r=>r.in.every(([id,n])=>n?inv.count(id)>=n:inv.count(id)>0);
+ function drawBP(){bp.innerHTML=`<h3>Backpack</h3><div class="grid">${slots.slice(9).map((s,i)=>cell(s,i+9,pick==i+9?'pk':'')).join('')}</div>
+  <div class="grid hb">${slots.slice(0,9).map((s,i)=>cell(s,i,pick==i?'pk':i==me.sel?'sel':'')).join('')}</div><h3>Craft</h3><div class="craft">`+
+  R.map((r,k)=>`<button data-r="${k}" ${ok(r)?'':'disabled'}>${r.in.map(([id,n])=>(n?n+' ':'')+(item(id).i||item(id).n)).join(' + ')} → ${r.out[1]>1?r.out[1]:''}${item(r.out[0]).i||''} ${item(r.out[0]).n}</button>`).join('')+`</div><button id="bpx">✕ Close</button>`}
+ const toggleBP=()=>{if(bp.style.display=='none'){pick=null;drawBP();bp.style.display='flex'}else bp.style.display='none'};G.inv.open=toggleBP;
+ bp.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();const c=e.target.closest('[data-i],[data-r],#bpx');if(!c)return;
+  if(c.id=='bpx')return toggleBP();
+  if(c.dataset.r!=null){const r=R[+c.dataset.r];if(!ok(r))return;r.in.forEach(([id,n])=>n&&inv.remove(id,n));const left=inv.add(...r.out);if(left)G.toast('Backpack full');else G.toast('Crafted '+item(r.out[0]).n,900);return drawBP()}
+  const i=+c.dataset.i;if(pick==null){if(slots[i]||i<9){pick=i;if(i<9){me.sel=i}}drawBP();drawHotI()}else{const a=slots[pick],b=slots[i];
+   if(a&&b&&a.id==b.id&&pick!=i){const k=Math.min(a.n,MAXS(b.id)-b.n);b.n+=k;a.n-=k;if(!a.n)slots[pick]=null;save()}else inv.swap(pick,i);pick=null;drawBP()}});
+ const bb=document.createElement('button');bb.id='bBag';bb.title='Backpack & crafting (E)';bb.textContent='🎒';$('minis').appendChild(bb);
+ bb.addEventListener('pointerdown',e=>{e.stopPropagation();e.preventDefault();toggleBP()});
+ // drops
+ const drops=new Set(),dg=new THREE.BoxGeometry(.28,.28,.28);
+ function spawn(id,n,x,y,z){const it=item(id);const m=new THREE.Mesh(dg,new THREE.MeshLambertMaterial({color:it.c??(it.food?0xd9534f:0xc8a165)}));
+  m.position.set(x,y,z);scene.add(m);const b=G.physics.add({pos:m.position,vel:new V3((Math.random()-.5)*2,3,(Math.random()-.5)*2),radius:.14,bounce:.2,mesh:m});drops.add({id,n,m,b,t:performance.now()})}
+ G.inv.drop=spawn;
+ G.on('broke',h=>{for(const d of DROP(h.b))if(d)spawn(d[0],d[1],h.x+.5,h.y+.5,h.z+.5)});
+ G.on('tick',(dt,now)=>{for(const d of drops){d.m.rotation.y+=dt*2;const age=now-d.t;
+  if(age>300000||(age>400&&d.m.position.distanceTo(new V3(me.pos.x,me.pos.y+.6,me.pos.z))<1.7&&inv.add(d.id,d.n)==0)){scene.remove(d.m);G.physics.remove(d.b);drops.delete(d)}}});
+ // hold-to-break with hardness + crack overlay + ring
+ const cc=document.createElement('canvas');cc.width=cc.height=64;{const x=cc.getContext('2d');x.strokeStyle='#000';x.lineWidth=3;
+  for(let k=0;k<9;k++){x.beginPath();let px=32,py=32;x.moveTo(px,py);for(let j=0;j<4;j++){px+=(Math.random()-.5)*30;py+=(Math.random()-.5)*30;x.lineTo(px,py)}x.stroke()}}
+ const crack=new THREE.Mesh(new THREE.BoxGeometry(1.02,1.02,1.02),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cc),transparent:true,opacity:0,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-3}));crack.visible=false;scene.add(crack);
+ let breaking=false,bk=null,prog=0;const ring=(id,v,p)=>$(id)&&$(id).style.setProperty(v,p);
+ G.breakTime=b=>{const h=HARD[b]??1,t=slots[me.sel]&&item(slots[me.sel].id);const mul=t&&t.tool=='pick'?1+(t.lv-1)*(PICK[b]||0):1;return h/mul};
+ G.surv={startBreak(){breaking=true},stopBreak(){breaking=false;prog=0;bk=null;crack.visible=false;ring('bB','--p',0)}};
+ // hunger + eating
+ let hunger=10,hT=0,rT=0,eating=0;try{hunger=+localStorage.bvHunger||10}catch(_){}
+ const hb=document.createElement('div');hb.id='hungerbar';$('mp').appendChild(hb);
+ const drawHu=()=>{hb.innerHTML=Array.from({length:10},(_,i)=>`<b class="${i<Math.ceil(hunger)?'':'e'}">🍗</b>`).join('');localStorage.bvHunger=hunger};drawHu();
+ G.hunger={get value(){return hunger},max:10,set(v){hunger=Math.max(0,Math.min(10,v));drawHu()},eat(id){id=res(id);const f=item(id)&&item(id).food;if(!f||!inv.remove(id,1))return false;G.hunger.set(hunger+f);G.toast('Ate '+item(id).n+' 😋',900);G.emit('eat',id);return true}};
+ G.surv.startEat=()=>{const s=slots[me.sel];if(s&&item(s.id).food){if(hunger>=10){G.toast('Not hungry');return true}eating=performance.now();return true}return false};
+ G.surv.stopEat=()=>{eating=0;ring('bY','--e',0)};
+ G.on('death',()=>{G.hunger.set(Math.max(hunger,6));G.surv.stopBreak()});
+ G.on('tick',(dt,now)=>{
+  if(breaking&&!G.inputPaused){const h=G.raycast();if(!h||BLOCKS[h.b].liquid){prog=0;bk=null;crack.visible=false}else{const k=h.x+','+h.y+','+h.z;if(k!=bk){bk=k;prog=0}
+   prog+=dt/Math.max(.05,G.breakTime(h.b));crack.visible=true;crack.position.set(h.x+.5,h.y+.5,h.z+.5);crack.material.opacity=.15+.75*Math.min(1,prog);
+   if(prog>=1){G.breakBlock();prog=0;bk=null;crack.visible=false}}ring('bB','--p',Math.min(1,prog))}
+  if(eating){const p=(now-eating)/1600;ring('bY','--e',Math.min(1,p));if(p>=1){const s=slots[me.sel];if(s)G.hunger.eat(s.id);eating=s&&item(s.id).food&&hunger<10?now:0;if(!eating)ring('bY','--e',0)}}
+  const rate=(G.mp.sprint&&(input.f||input.s))?3:1;hT+=dt*rate;if(hT>=45){hT=0;G.hunger.set(hunger-.5)}
+  rT+=dt;if(rT>=4){rT=0;if(hunger>=9&&G.combat.hp<G.combat.max){G.combat.heal(1);G.hunger.set(hunger-.25)}else if(hunger<=0)G.combat.damage('me',1)}});
+ G.on('kbd',k=>{if(k=='e')toggleBP();if(k=='Escape'&&bp.style.display!='none')toggleBP()});
+ addEventListener('keyup',e=>{const k=kn(e);if(k=='z')G.surv.stopBreak();if(k=='u')G.mp.useUp()});G.on('kbd',k=>{if(k=='z')G.surv.startBreak()})}
 // ---- start
 $('nick').value=localStorage.bvName||'';
 async function start(){G.name=($('nick').value.trim()||'Player'+(Math.random()*999|0)).slice(0,14);localStorage.bvName=G.name;
