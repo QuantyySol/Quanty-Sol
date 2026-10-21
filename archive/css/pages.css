@@ -1,0 +1,70 @@
+/* pages.css : mobile nav scroll row + Positions / History / KOL Watch polish. Desktop only gets the empty-state style. */
+.pg-empty{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:28px 12px!important;text-align:center;color:#a9b8cc;border:0!important}
+.pg-empty:before{content:"";width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 35%,rgba(77,163,255,.5),rgba(180,140,255,.25) 60%,transparent 70%);box-shadow:0 0 18px rgba(77,163,255,.35);border:1px solid rgba(150,190,255,.35)}
+.pg-empty b{color:#eaf2ff;font-size:15px}.pg-empty small{font-size:12px;color:#8fa0b8}
+@media(max-width:600px){
+ /* 1. nav: one clean scroll row with edge fades */
+ header nav{position:relative;flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x proximity;scroll-padding:0 24px;padding:2px 18px 6px;gap:4px;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 18px,#000 calc(100% - 18px),transparent 100%)}
+ header nav.pg-s0{-webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 22px),transparent 100%);mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 22px),transparent 100%)}
+ header nav.pg-s1{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 22px,#000 100%);mask-image:linear-gradient(90deg,transparent 0,#000 22px,#000 100%)}
+ header nav a{flex:0 0 auto;scroll-snap-align:center;font-size:14px;padding:6px 12px}
+ /* 2. pages: consistent spacing */
+ main>section:not(#office){padding:18px 14px 70px}
+ main>section:not(#office) h2{font-size:24px}
+ main>section:not(#office) p.sub{font-size:14px;margin-bottom:14px}
+ #op,#cl{padding:8px}
+ /* card-style rows */
+ #op .row:not(.pg-empty),#cl .row:not(.pg-empty){display:grid;grid-template-columns:1fr auto;grid-template-areas:"m x" "t t";gap:4px 10px;align-items:center;
+  padding:12px;margin:0 0 8px;border:1px solid rgba(150,190,255,.12)!important;border-radius:12px;background:rgba(255,255,255,.025)}
+ #op .row:last-child,#cl .row:last-child{margin-bottom:0}
+ #op .row .t,#cl .row .t{grid-area:t;min-width:0;font-size:12px;color:#8fa0b8}
+ #op .row .m,#cl .row .m{grid-area:m;min-width:0;font-size:15px;line-height:1.35;overflow-wrap:anywhere}
+ #op .row .m b,#cl .row .m b{color:#fff}
+ #op .row .x,#cl .row .x{grid-area:x;font-weight:800;font-size:16px;font-variant-numeric:tabular-nums;text-align:right}
+ #cl .row .tag{font-size:11px;padding:1px 6px;margin-right:4px;vertical-align:1px}
+ /* KOL Watch */
+ #kol .card{padding:14px}
+ #kol .card>p{font-size:14px;margin:0 0 10px;line-height:1.45}
+ #kg{grid-template-columns:1fr 1fr!important;gap:8px!important;margin:12px 0!important}
+ #kg .card{padding:10px 12px;border-radius:12px}
+ #kg .card .k{font-size:10px;letter-spacing:.06em}
+ #kg .card .v{font-size:22px}
+ #kup{font-size:11px}
+}
+
+/* ===== Stats / Strategy / About polish (all sizes). Type scale 11/13/15/18. ===== */
+#stats,#rules,#about{--pg-ic:#8fc4ff}
+#stats p.sub,#rules p.sub{font-size:15px;max-width:68ch}
+#stats p.sub:after,#rules p.sub:after{content:"Paper trading · not financial advice";display:inline-block;margin-left:8px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#05070a;background:linear-gradient(90deg,#39ff88,#4da3ff,#ff5cc8);border-radius:99px;padding:2px 9px;vertical-align:2px}
+/* section headings inside Stats */
+#stats .bn-h,#stats #bn-sgl{display:flex;align-items:center;gap:8px;font-size:13px;color:#dbe6f5;margin:22px 0 10px}
+#stats .bn-h:before{content:"";width:8px;height:8px;border-radius:2px;background:linear-gradient(135deg,#39ff88,#4da3ff);box-shadow:0 0 8px rgba(77,163,255,.6)}
+#stats #sg{margin-bottom:14px}
+#stats .card .k{font-size:11px}
+/* Strategy: icon rules list */
+#rules .card{padding:20px 22px}
+ul.rules{list-style:none;margin:0;padding:0;max-width:70ch}
+ul.rules li{position:relative;margin:0;padding:12px 0 12px 40px;font-size:15px;line-height:1.6;color:#e6eefa;border-bottom:1px solid rgba(150,190,255,.10)}
+ul.rules li:last-child{border-bottom:0}
+ul.rules li:before{content:"";position:absolute;left:0;top:12px;width:26px;height:26px;border-radius:8px;background:rgba(77,163,255,.14) center/16px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238fc4ff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z'/%3E%3Cpath d='M9 12l2 2 4-4'/%3E%3C/svg%3E");border:1px solid rgba(150,190,255,.25)}
+ul.rules li:nth-child(2):before{background-color:rgba(57,255,136,.14);border-color:rgba(57,255,136,.35)}
+ul.rules li:nth-child(3):before,ul.rules li:nth-child(4):before{background-color:rgba(255,92,122,.14);border-color:rgba(255,92,122,.35)}
+ul.rules li:nth-child(5):before{background-color:rgba(255,191,63,.14);border-color:rgba(255,191,63,.35)}
+/* About: readable long text + prominent paper banner */
+#about .card{padding:22px 24px}
+#about .card:before{content:"Paper trading · not financial advice";display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#05070a;background:linear-gradient(90deg,#39ff88,#4da3ff,#ff5cc8);border-radius:99px;padding:4px 12px;box-shadow:0 0 14px rgba(77,163,255,.35)}
+#about .card p{max-width:68ch;font-size:15px;line-height:1.7;color:#e6eefa;margin:0 0 12px}
+#about .card p:last-child{margin-bottom:0;padding:12px 14px;border-left:3px solid #ff5cc8;background:rgba(255,92,200,.07);border-radius:0 10px 10px 0}
+@media(max-width:600px){
+ #stats p.sub:after,#rules p.sub:after{display:table;margin:8px 0 0}
+ #rules .card,#about .card{padding:16px}
+ ul.rules li{padding:10px 0 10px 36px;font-size:15px}ul.rules li:before{top:11px;width:24px;height:24px;background-size:14px}
+ #stats .bn-h,#stats #bn-sgl{font-size:13px;margin:18px 0 8px}
+}
+/* nav fit (<=600px): all tabs visible in two compact rows, no sideways scroll; room suffix hidden (room shows in the in-stage tabs) */
+@media(max-width:600px){
+ header nav{flex-wrap:wrap!important;justify-content:center;overflow:visible!important;gap:3px!important;padding:2px 2px 6px!important;-webkit-mask-image:none!important;mask-image:none!important}
+ header nav a{font-size:12px!important;padding:6px 7px!important;letter-spacing:0!important;min-height:34px;box-sizing:border-box;display:inline-flex;align-items:center}
+ header nav a .rm-sub{display:none}
+}

@@ -1,0 +1,28 @@
+/* twins.css : Bag twins / Lonely sock badges and their mini panel (paper trades only). */
+.tw-b{display:inline-flex;align-items:center;gap:2px;margin-left:5px;padding:0 6px;border-radius:99px;font:700 10px/1.6 Inter,system-ui,sans-serif;
+ white-space:nowrap;vertical-align:middle;cursor:pointer;letter-spacing:.02em;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+ color:#ffd6f3;background:rgba(255,92,200,.16);border:1px solid rgba(255,92,200,.55);box-shadow:0 0 8px rgba(255,92,200,.25);transition:transform .15s,box-shadow .15s}
+.tw-b:hover,.tw-b:focus{transform:translateY(-1px) rotate(-3deg);box-shadow:0 0 12px rgba(255,92,200,.55);outline:none}
+.tw-b.tw-1{color:#d9e1ea;background:rgba(150,165,185,.14);border-color:rgba(170,185,205,.5);box-shadow:none;font-weight:600}
+.tw-b.tw-1:hover,.tw-b.tw-1:focus{box-shadow:0 0 10px rgba(170,185,205,.4)}
+.tw-b.tw-w{position:absolute;z-index:3;top:24px;right:5px;margin:0;padding:0 4px;font-size:9px;background:rgba(40,10,32,.9)}
+.tw-b.tw-w.tw-1{background:rgba(20,26,34,.92)}
+.mw-s.tw-twin{border-color:rgba(255,92,200,.75)!important;box-shadow:0 4px 0 #11161d,0 0 12px rgba(255,92,200,.35),inset 0 0 18px #000!important}
+#op .row .m .tw-b{font-size:11px}
+#tw-pop{display:none;position:fixed;z-index:9999;min-width:230px;max-width:min(340px,92vw);padding:10px 12px 8px;border-radius:12px;
+ background:rgba(9,14,20,.97);border:1px solid rgba(255,92,200,.45);box-shadow:0 10px 30px rgba(0,0,0,.55),0 0 18px rgba(255,92,200,.18);
+ color:#e6edf5;font:12px/1.35 Inter,system-ui,sans-serif;font-variant-numeric:tabular-nums;pointer-events:auto}
+#tw-pop .tw-h{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:800;font-size:13px}
+#tw-pop .tw-h b{color:#fff}
+#tw-pop .tw-pp{font-size:9px;font-weight:800;letter-spacing:.08em;color:#05070a;background:#ffd75f;border-radius:99px;padding:1px 6px}
+#tw-pop .tw-sub{color:#93a3b8;font-size:11px;margin:2px 0 6px}
+#tw-pop .tw-r{display:grid;grid-template-columns:62px 1fr auto auto 10px;align-items:center;gap:8px;padding:4px 0;border-top:1px solid rgba(255,255,255,.06)}
+#tw-pop .tw-r i{font-style:normal;font-weight:800;color:var(--c)}
+#tw-pop .tw-r span{color:#b8c6d6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tw-pop .tw-r b{font-weight:800}#tw-pop .tw-r em{font-style:normal;font-size:11px;color:#93a3b8}
+#tw-pop .tw-r .lq-dot{margin:0}
+#tw-pop .tw-gone{grid-template-columns:62px 1fr auto;opacity:.75}
+#tw-pop .tw-gone i{text-decoration:line-through;text-decoration-thickness:1px}
+#tw-pop .up{color:#4dffa0}#tw-pop .dn{color:#ff6b8a}
+#tw-pop .tw-f{margin-top:6px;color:#7d8da2;font-size:10px}
+@media(max-width:600px){.tw-b{font-size:10px;padding:0 5px}#tw-pop{font-size:12px}}

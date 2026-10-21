@@ -1,0 +1,79 @@
+/* declutter.css : mobile-only declutter pass for the Office view (<=600px). Desktop untouched. */
+.dc-pill{display:none}
+@media(max-width:600px){
+ /* 1. fold the mini-monitor row away; open coins still show in the trades panel + expand view */
+ .stage .mwslot,.stage #monitor-wall,.stage .wall{display:none!important}
+ /* 3. room breathing room: office/breakroom tabs sit in the space the monitor row freed */
+ .stage:not(.in-brk) .brk-nav{top:18%}
+ /* 2. one compact status pill replaces the three stacked stats lines */
+ .stage .ticker{padding:6px 10px 8px;gap:6px;font-size:12px;background:linear-gradient(transparent,rgba(5,7,10,.75))}
+ .stage .ticker>*:not(.dc-pill){display:none}
+ .stage .ticker.dc-open>*{display:inline-flex}
+ .stage .ticker.dc-open{flex-direction:column;align-items:center;background:rgba(5,7,10,.92)}
+ .dc-pill{display:inline-flex;align-items:center;gap:8px;max-width:100%;padding:6px 12px;border-radius:99px;cursor:pointer;
+  font:600 12px/1.2 Inter,system-ui,sans-serif;color:var(--ink);white-space:nowrap;overflow:hidden;font-variant-numeric:tabular-nums;
+  background:rgba(11,18,20,.82);border:1px solid rgba(77,163,255,.35);box-shadow:0 0 14px rgba(57,255,136,.18),0 0 22px rgba(255,92,200,.12);backdrop-filter:blur(6px)}
+ .dc-pill i{font-style:normal;color:var(--mut)}.dc-pill b{font-weight:800}
+ .dc-pill .dc-d{width:7px;height:7px;border-radius:50%;background:#ffd75f;flex:0 0 7px}
+ .dc-pill .dc-d.on{background:var(--g);box-shadow:0 0 8px var(--g);animation:dcp 1.6s ease-in-out infinite}
+ .dc-pill .dc-s{font-size:10px;letter-spacing:.08em;font-weight:800}
+ @keyframes dcp{50%{opacity:.4}}
+ /* 4. slimmer dock */
+ body{padding-bottom:46px}
+ #minis{gap:6px;padding:4px 8px calc(4px + env(safe-area-inset-bottom))}
+ #minis .mini{padding:3px 10px 3px 3px;border-radius:12px;gap:6px;box-shadow:none}
+ #minis .mini .h{width:26px!important;height:26px!important;flex-basis:26px!important;border-width:1px;box-shadow:0 0 5px var(--c)}
+ #minis .mini .nm{font-size:10px}
+ #minis .dk-i{font-size:10px;max-width:96px}
+}
+
+/* ===== Desktop polish (>=601px): spacing, type scale (11/13/15/18), hierarchy. Mobile untouched. ===== */
+@media(min-width:601px){
+ :root{--dc-glass:rgba(10,16,20,.72);--dc-edge:rgba(120,200,255,.16);--dc-aur:linear-gradient(90deg,rgba(57,255,136,.55),rgba(77,163,255,.55),rgba(255,92,200,.55))}
+ header{border-bottom:0;box-shadow:0 1px 0 rgba(255,255,255,.04)}
+ header:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:var(--dc-aur);opacity:.45}
+ .bar{padding:8px 28px;gap:16px}
+ .brand{font-size:15px;letter-spacing:-.01em}
+ nav a{font-size:13px;padding:6px 12px;letter-spacing:.01em}
+ /* status bar: one centered glass strip instead of a wide spread line */
+ .stage .ticker{left:50%;right:auto;bottom:14px;transform:translateX(-50%);width:max-content;max-width:94%;gap:0;padding:0;flex-wrap:nowrap;
+  background:var(--dc-glass);border:1px solid var(--dc-edge);border-radius:99px;backdrop-filter:blur(10px);font-size:13px;color:var(--mut);
+  box-shadow:0 8px 30px rgba(0,0,0,.45),0 0 24px rgba(77,163,255,.10)}
+ .stage .ticker>span{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;white-space:nowrap}
+ .stage .ticker>span+span{border-left:1px solid rgba(255,255,255,.07)}
+ .stage .ticker b{font-size:15px;color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+ .stage .ticker b.up,.stage .ticker .up{color:var(--g)}.stage .ticker b.dn,.stage .ticker .dn{color:var(--r)}
+ .stage .ticker #lv{font-size:11px;letter-spacing:.08em;padding:2px 8px;border-radius:99px}
+ .stage .ticker #lq-strip{font-size:12px;max-width:420px;overflow:hidden;text-overflow:ellipsis}
+ /* main monitor: softer aurora edge */
+ .stage .screen{border-color:rgba(57,255,136,.28);border-radius:14px;box-shadow:0 0 0 1px rgba(77,163,255,.12),0 0 28px rgba(57,255,136,.22),0 0 60px rgba(255,92,200,.08)}
+ .stage .screen .ph{font-size:11px;letter-spacing:.14em}
+ /* tabs/follow chips aligned to the type scale */
+ .brk-tabs button{font-size:13px}.brk-fol{font-size:11px;letter-spacing:.08em}
+ /* dock: consistent cards, quieter glow */
+ #minis{gap:10px;padding:8px 16px calc(8px + env(safe-area-inset-bottom));border-top:0;box-shadow:0 -1px 0 rgba(255,255,255,.04)}
+ #minis .mini{border-radius:14px;padding:5px 14px 5px 5px;background:rgba(11,18,20,.85);box-shadow:0 0 10px color-mix(in srgb,var(--c) 16%,transparent)}
+ #minis .mini .nm{font-size:11px;letter-spacing:.06em}
+ #minis .dk-i{font-size:12px}
+ footer{font-size:11px;letter-spacing:.04em;padding:12px 16px 14px;opacity:.8}
+ main>section:not(#office) h2{font-size:28px;letter-spacing:-.02em}
+ main>section:not(#office) .card{border-radius:14px;border-color:rgba(120,200,255,.10)}
+}
+
+/* ===== Mobile declutter v2 (<=600px): nav gets its own band above the VS board, no LIVE pill duplicate, dock snaps 3-up ===== */
+@media(max-width:600px){
+ .stage:not(.in-brk) .brk-nav{top:106px;gap:4px}
+ .stage .brk-nav .brk-tabs button,.stage .brk-nav .brk-fol button{min-height:40px;min-width:40px;padding-top:0;padding-bottom:0;font-size:13px}
+ .stage .brk-nav .brk-tabs,.stage .brk-nav .brk-fol{padding:2px}
+ /* bank totals already live on the VS board + dock: hide the duplicate LIVE pill in the Office */
+ .stage:not(.in-brk) .ticker{display:none!important}
+ /* dock: exactly 3 cards per screen, swipe for more, fade hints there is more */
+ #minis{justify-content:flex-start;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding:0 8px;gap:6px;
+  -webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+ #minis.dk-end{-webkit-mask-image:none;mask-image:none}
+ #minis .mini{flex:0 0 calc((100% - 28px)/3);min-width:0;scroll-snap-align:start;box-sizing:border-box;padding-right:6px}
+ #minis .dk-t{overflow:hidden}
+ #minis .mini .nm,#minis .dk-i{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ #minis .dk-i{font-size:10px}
+}
+@media(max-width:600px){#minis .dk-i{white-space:normal;line-height:1.15;text-overflow:clip}}

@@ -1,0 +1,46 @@
+/* chrome.css : brighter, colorful UI chrome (header, nav, subpages, cards, buttons). Does not style the office room scene. */
+:root{--ac1:#39ff88;--ac2:#4da3ff;--ac3:#b48cff;--ac4:#ff5cc8;--aur:linear-gradient(100deg,var(--ac1),var(--ac2) 40%,var(--ac3) 70%,var(--ac4));
+ --glass:linear-gradient(160deg,rgba(28,40,58,.72),rgba(14,20,30,.78));--gedge:rgba(150,190,255,.18);--ink:#f4f8ff;--mut:#a9b8cc}
+body{background:radial-gradient(1200px 600px at 10% -10%,rgba(77,163,255,.14),transparent 60%),radial-gradient(900px 500px at 95% 0%,rgba(255,92,200,.12),transparent 60%),radial-gradient(900px 600px at 50% 110%,rgba(57,255,136,.10),transparent 60%),#070a12;background-attachment:fixed}
+/* header */
+header{background:rgba(9,13,22,.78)!important;backdrop-filter:blur(14px) saturate(1.4)}
+header:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--aur);opacity:.8}
+.brand img{border:0;box-shadow:0 0 0 2px #070a12,0 0 0 3.5px var(--ac2),0 0 14px rgba(77,163,255,.6)}
+.brand .long span{background:var(--aur);-webkit-background-clip:text;background-clip:text;color:transparent}
+.paper{background:var(--aur)!important;color:#05070a!important;box-shadow:0 0 14px rgba(180,140,255,.45);font-weight:900}
+/* nav tabs */
+nav a{color:#c3cfe0;transition:color .15s,background .15s,box-shadow .15s}
+nav a:hover{color:#fff;background:rgba(77,163,255,.14)}
+nav a:active{transform:scale(.96)}
+nav a.on{color:#05070a!important;background:var(--aur)!important;box-shadow:0 0 16px rgba(77,163,255,.45)}
+nav a:focus-visible{outline:2px solid var(--ac2);outline-offset:2px}
+/* subpages */
+main>section:not(#office) h2{font-size:30px;font-weight:850;letter-spacing:-.02em;background:linear-gradient(100deg,#fff 30%,#bcd6ff 60%,#ffc2ea);-webkit-background-clip:text;background-clip:text;color:transparent;display:inline-block}
+main>section:not(#office) h2:after{content:"";display:block;height:3px;width:56px;margin-top:6px;border-radius:3px;background:var(--aur)}
+main>section:not(#office) p.sub{color:var(--mut);margin-top:8px}
+main>section:not(#office) .card{background:var(--glass);border:1px solid var(--gedge);border-radius:18px;backdrop-filter:blur(10px);box-shadow:0 10px 30px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06);transition:transform .18s,box-shadow .18s,border-color .18s}
+main>section:not(#office) .grid>.card:not(.bk):hover{transform:translateY(-2px);border-color:rgba(180,140,255,.45);box-shadow:0 14px 34px rgba(0,0,0,.4),0 0 22px rgba(180,140,255,.22)}
+main>section:not(#office) .grid>.card:not(.bk):nth-child(4n+1){border-top:2px solid var(--ac1)}
+main>section:not(#office) .grid>.card:not(.bk):nth-child(4n+2){border-top:2px solid var(--ac2)}
+main>section:not(#office) .grid>.card:not(.bk):nth-child(4n+3){border-top:2px solid var(--ac3)}
+main>section:not(#office) .grid>.card:not(.bk):nth-child(4n+4){border-top:2px solid var(--ac4)}
+main>section:not(#office) .k{color:#b9c7da;font-size:12px;font-weight:700}
+main>section:not(#office) .v{color:#fff}
+/* rows / tables */
+main>section:not(#office) .row{border-bottom:1px solid rgba(150,190,255,.10);border-radius:10px;padding:12px 10px;transition:background .15s}
+main>section:not(#office) .row:hover{background:rgba(77,163,255,.08)}
+main>section:not(#office) .row .t{color:var(--mut)}
+main>section:not(#office) table{border-collapse:collapse;width:100%}
+main>section:not(#office) th{color:#b9c7da;font-size:12px;text-transform:uppercase;letter-spacing:.08em;text-align:left;padding:8px;border-bottom:1px solid var(--gedge)}
+main>section:not(#office) td{padding:8px;border-bottom:1px solid rgba(150,190,255,.08)}
+main>section:not(#office) tr:hover td{background:rgba(180,140,255,.07)}
+main>section:not(#office) a{color:#8fc4ff}main>section:not(#office) a:hover{color:#ffc2ea}
+main>section:not(#office) a.pos,main>section:not(#office) a.tr{color:inherit}
+.up{color:#4dffa0}.dn{color:#ff6b8a}
+/* buttons (outside the room scene) */
+main>section:not(#office) button,.vs-ov button{background:rgba(77,163,255,.14);color:#eaf2ff;border:1px solid rgba(150,190,255,.3);border-radius:10px;padding:6px 12px;font-weight:700;cursor:pointer;transition:background .15s,box-shadow .15s,transform .1s}
+main>section:not(#office) button:hover,.vs-ov button:hover{background:rgba(180,140,255,.22);box-shadow:0 0 14px rgba(180,140,255,.35)}
+main>section:not(#office) button:active,.vs-ov button:active{transform:scale(.96)}
+footer{color:#a9b8cc}
+@media(max-width:600px){main>section:not(#office) h2{font-size:24px}main>section:not(#office) .card{border-radius:14px}nav a.on{box-shadow:0 0 10px rgba(77,163,255,.4)}}
+@media(hover:none){main>section:not(#office) .grid>.card:hover{transform:none}}
