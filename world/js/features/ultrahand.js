@@ -4,7 +4,7 @@
 // 🔧 adds a part (wheel, fan, spring, rocket; inventory items uh_*, craft in 🎒) to your hand. 🚀 LAUNCH fires rockets + springs of the contraption
 // New core controls: while ✋ is on, Y = grab/glue (setUse); X on a contraption = board it; B on a piece = detach it; A while riding = launch (springs/rockets).
 // Ride: stand on it; the stick drives (wheels), jump = fan lift. Desktop: G grab/glue, ,/. rotate,
-// R/H nudge held piece up/down, L launch. Contraptions sync via G.net 'ultrahand' (keep:1 for late joiners) and
+// R/H nudge held piece up/down, L launch. Contraptions sync via G.net 'ultrahand' (kept snapshot per rig, replace+maxAge) and
 // despawn after ~3 min with nobody near them.
 //
 // SPRING-PAD HOOK (for fallguys.js or any feature, no edits to this file needed):
@@ -15,7 +15,12 @@
 export default{name:'ultrahand',init(G){
  const T=G.THREE,B=G.BLOCKS,F='ultrahand',me=G.player,UP=new T.Vector3(0,1,0);
  const PART={wheel:{c:0x222222,e:'🛞'},fan:{c:0xdddddd,e:'🌀'},spring:{c:0x66ff66,e:'🌱'},rocket:{c:0xff5533,e:'🚀'}};
- const DESPAWN=180,rigs=new Map(),pads=new Map();let seq=0,mode=false,held=null,draft=null,lastNear=null;
+ const DESPAWN=180,rigs=new Map(),pads=new Map(),FP=F+'-pad';
+ // kept log: one replaceable full snapshot per contraption (expires with despawn), one per pad coordinate
+ G.net.keepCap&&(G.net.keepCap(F,40),G.net.keepCap(FP,80));
+ const KO=id=>({keep:1,replace:'rig:'+id,maxAge:DESPAWN*1000});
+ function snap(r){G.net.send(F,{k:'snap',r:{id:r.id,owner:r.owner,p:r.g.position.toArray().map(v=>+v.toFixed(2)),yaw:+r.g.rotation.y.toFixed(2),frozen:r.frozen,cells:r.cells.map(pack)}},KO(r.id))}
+let seq=0,mode=false,held=null,draft=null,lastNear=null;
  // parts are inventory items (craft in 🎒; small starter stack once)
  const IV=G.inv,IT={};if(IV&&IV.defineItem){for(const k in PART)IT[k]=IV.defineItem('uh_'+k,{name:k,icon:PART[k].e,stack:16,color:PART[k].c});
   if(G.RECIPES){const P=9,S=100,ST=3,L=12;G.RECIPES.push({out:[IT.wheel,2],in:[[P,2],[S,1]]},{out:[IT.fan,1],in:[[P,3],[S,2]]},{out:[IT.spring,2],in:[[ST,1],[S,2]]},{out:[IT.rocket,1],in:[[ST,2],[L,0]]})}
@@ -41,14 +46,14 @@ export default{name:'ultrahand',init(G){
  function rmCell(r,c,remote){const i=r.cells.indexOf(c);if(i<0)return;r.cells.splice(i,1);c.untarget&&c.untarget();r.g.remove(c.m);
   if(!remote){const w=c.m.getWorldPosition(new T.Vector3()).floor();
    giveBack(c);if(!c.part){if(!(G.inv&&G.inv.add(c.b,1)==0)&&!G.world.solid(G.world.getBlock(w.x,w.y,w.z)))G.world.placeBlock(w.x,w.y,w.z,c.b)}
-   G.net.send(F,{k:'rm',id:r.id,c:pack(c),keep:1});G.toast('🔧 Detached '+(c.part?PART[c.part].e+' '+c.part:B[c.b]?.n||'piece'),900)}
+   G.net.send(F,{k:'rm',id:r.id,c:pack(c)});if(r.cells.length)snap(r);G.toast('🔧 Detached '+(c.part?PART[c.part].e+' '+c.part:B[c.b]?.n||'piece'),900)}
   if(!r.cells.length)killRig(r,remote)}
  function board(r){let top=null,tv=-1e9;for(const c of r.cells){const w=c.m.getWorldPosition(new T.Vector3());if(w.y>tv){tv=w.y;top=w}}if(!top)return;
   me.pos.set(top.x,top.y+.55,top.z);me.vel.set(0,0,0);me.fallStart=null;if(!mine(r))claim(r);if(r===draft)draft=null;r.frozen=false;r.body.frozen=false;
   G.toast('🛞 Riding · A = '+(n(r,'rocket')||n(r,'spring')?'launch':'jump'),1100)}
  const n=(r,k)=>r.cells.filter(c=>c.part==k).length;
  const pack=c=>({x:c.x,y:c.y,z:c.z,b:c.b,part:c.part,r:c.r});
- function killRig(r,remote){r.cells.forEach(c=>c.untarget&&c.untarget());G.scene.remove(r.g);G.physics.remove(r.body);rigs.delete(r.id);if(draft===r)draft=null;if(!remote)G.net.send(F,{k:'gone',id:r.id,keep:1})}
+ function killRig(r,remote){r.cells.forEach(c=>c.untarget&&c.untarget());G.scene.remove(r.g);G.physics.remove(r.body);rigs.delete(r.id);if(draft===r)draft=null;if(!remote)G.net.send(F,{k:'gone',id:r.id},{keep:1,replace:'rig:'+r.id,maxAge:15000})}
  function mine(r){return r.owner==G.net.id}
  // ---- held piece (floats in front of the camera)
  const fwd=()=>{const d=new T.Vector3();G.camera.getWorldDirection(d);return d};
@@ -61,10 +66,10 @@ export default{name:'ultrahand',init(G){
  function glue(){if(!held)return grab();const wp=heldPos();
   if(held.c.part&&IT[held.c.part]&&!IV.remove(IT[held.c.part],1)){G.toast('No '+PART[held.c.part].e+' left · craft more in 🎒',1400);return}
   if(!draft||!rigs.has(draft.id)){const p=[Math.floor(wp.x)+.5,Math.floor(wp.y)+.5,Math.floor(wp.z)+.5];
-   draft=mkRig({id:G.net.id+':'+Date.now().toString(36)+(seq++),owner:G.net.id,p,yaw:0,frozen:true,cells:[]});G.net.send(F,{k:'new',r:{id:draft.id,owner:draft.owner,p,yaw:0,frozen:true,cells:[]},keep:1})}
+   draft=mkRig({id:G.net.id+':'+Date.now().toString(36)+(seq++),owner:G.net.id,p,yaw:0,frozen:true,cells:[]});G.net.send(F,{k:'new',r:{id:draft.id,owner:draft.owner,p,yaw:0,frozen:true,cells:[]}})}
   const l=draft.g.worldToLocal(wp.clone());let c={...held.c,x:Math.round(l.x),y:Math.round(l.y),z:Math.round(l.z),r:held.rot};
   while(draft.cells.some(o=>o.x==c.x&&o.y==c.y&&o.z==c.z))c.y++;
-  addCell(draft,c);G.net.send(F,{k:'cell',id:draft.id,c:pack(c),keep:1});G.scene.remove(held.m);held=null;
+  addCell(draft,c);G.net.send(F,{k:'cell',id:draft.id,c:pack(c)});snap(draft);G.scene.remove(held.m);held=null;
   G.toast('🔗 Glued ('+draft.cells.length+' pieces)'+(draft.cells.length==1?' · keep gluing, then 🚀':''),1100);setHint()}
  // ---- touch capture (hold=grab, drag=move, twist=rotate, tap=glue); chains with any existing G.capture
  const prev=G.capture,pts=new Map();let holdT=null,tap=null,twist=null;
@@ -102,7 +107,8 @@ export default{name:'ultrahand',init(G){
  G.on('interact',ev=>{if(ev.target&&ev.target.kind=='contraption'&&rigs.has(ev.target.rig.id)){ev.handled=true;board(ev.target.rig)}});
  G.on('attack',ev=>{const t=ev.target;if(t&&t.kind=='contraption'&&rigs.has(t.rig.id)){ev.cancel=true;ev.handled=true;rmCell(t.rig,t.cell)}});
  G.net.on(F,m=>{const r=rigs.get(m.id||m.r?.id);
-  if(m.k=='new'){mkRig(m.r,true);return}if(m.k=='pad'){m.off?removePad(m.x,m.y,m.z,true):springPad(m.x,m.y,m.z,m.o,true);return}if(!r)return;r.seen=performance.now();
+  if(m.k=='new'){mkRig(m.r,true);return}if(m.k=='snap'){if(!r){mkRig(m.r,true);return}if(mine(r))return;r.seen=performance.now();const has=(a,c)=>a.some(o=>o.x==c.x&&o.y==c.y&&o.z==c.z);
+   m.r.cells.forEach(c=>addCell(r,c));r.cells.filter(c=>!has(m.r.cells,c)).forEach(c=>rmCell(r,c,true));return}if(m.k=='pad'){padMsg(m);return}if(!r)return;r.seen=performance.now();
   if(m.k=='cell')addCell(r,m.c);
   else if(m.k=='rm'){const c=r.cells.find(o=>o.x==m.c.x&&o.y==m.c.y&&o.z==m.c.z);c&&rmCell(r,c,true)}
   else if(m.k=='pos'){r.tp=new T.Vector3().fromArray(m.p);r.tyaw=m.yaw;r.frozen=!!m.fz;if(m.b!==undefined)r.burn=m.b}
@@ -110,14 +116,16 @@ export default{name:'ultrahand',init(G){
   else if(m.k=='fire'){r.burn=m.burn||0;r.frozen=false}
   else if(m.k=='gone')killRig(r,true)});
  // ---- spring pads (public hook)
+ function padMsg(m){m.off?removePad(m.x,m.y,m.z,true):springPad(m.x,m.y,m.z,m.o,true)}
+ G.net.on(FP,padMsg);
  function springPad(x,y,z,o={},remote){x|=0;y|=0;z|=0;const k=x+','+y+','+z;if(pads.has(k))return pads.get(k);const m=cellMesh({part:'spring',x:x+.5,y:y+1.45,z:z+.5});
   if(o.color)m.traverse(q=>{if(q.material&&q.geometry?.type=='TorusGeometry')q.material=M(o.color)});G.scene.add(m);const p={x,y,z,power:o.power||16,m,t:0};pads.set(k,p);
-  if(!remote)G.net.send(F,{k:'pad',x,y,z,o:{power:p.power,color:o.color},keep:1});return p}
- function removePad(x,y,z,remote){const k=(x|0)+','+(y|0)+','+(z|0),p=pads.get(k);if(!p)return;G.scene.remove(p.m);pads.delete(k);if(!remote)G.net.send(F,{k:'pad',x,y,z,off:1,keep:1})}
+  if(!remote)G.net.send(FP,{k:'pad',x,y,z,o:{power:p.power,color:o.color}},{keep:1,replace:k});return p}
+ function removePad(x,y,z,remote){const k=(x|0)+','+(y|0)+','+(z|0),p=pads.get(k);if(!p)return;G.scene.remove(p.m);pads.delete(k);if(!remote)G.net.send(FP,{k:'pad',x,y,z,off:1},{keep:1,replace:k,maxAge:60000})}
  G.on('ultrahand:pad',(x,y,z,o)=>springPad(x,y,z,o));
  G.ultrahand={springPad:(x,y,z,o)=>springPad(x,y,z,o),removePad:(x,y,z)=>removePad(x,y,z),rigs,pads,PART,
-  _test:{build(cells,p){const r=mkRig({id:G.net.id+':t'+(seq++),owner:G.net.id,p,yaw:0,frozen:true,cells:[]});G.net.send(F,{k:'new',r:{id:r.id,owner:r.owner,p,yaw:0,frozen:true,cells:[]},keep:1});
-   cells.forEach(c=>{addCell(r,c);G.net.send(F,{k:'cell',id:r.id,c:pack(c),keep:1})});draft=r;return r.id},launch,board:id=>board(rigs.get(id)),detach:(id,i)=>{const r=rigs.get(id);rmCell(r,r.cells[i])},riding:()=>ridingNow&&ridingNow.r.id,get use(){return !!useRel},toggle,grab,glue,holdPiece}};
+  _test:{build(cells,p){const r=mkRig({id:G.net.id+':t'+(seq++),owner:G.net.id,p,yaw:0,frozen:true,cells:[]});G.net.send(F,{k:'new',r:{id:r.id,owner:r.owner,p,yaw:0,frozen:true,cells:[]}});
+   cells.forEach(c=>{addCell(r,c);G.net.send(F,{k:'cell',id:r.id,c:pack(c)})});snap(r);draft=r;return r.id},launch,board:id=>board(rigs.get(id)),detach:(id,i)=>{const r=rigs.get(id);rmCell(r,r.cells[i])},riding:()=>ridingNow&&ridingNow.r.id,get use(){return !!useRel},toggle,grab,glue,holdPiece}};
  // ---- per-frame
  let st=0,ridingNow=null,jPrev=false;const tmp=new T.Vector3();
  G.on('tick',(dt,now)=>{st+=dt;const send=st>.12;if(send)st=0;const pp=me.pos;
@@ -140,7 +148,7 @@ export default{name:'ultrahand',init(G){
      if(n(r,'spring')&&b.onGround&&b.vel.y<=.5&&r.burn<=0)b.vel.y=7+n(r,'spring');
      b.onGround=false;b.vel.y=Math.min(b.vel.y,30)}
     if(r.idle>DESPAWN||g.position.y<-30){r.cells.forEach(giveBack);killRig(r);G.toast('An unattended contraption despawned',1200);continue}
-    if(send&&(!r.frozen||!r.sentFrozen)){r.sentFrozen=r.frozen;G.net.send(F,{k:'pos',id:r.id,p:g.position.toArray().map(v=>+v.toFixed(2)),yaw:+g.rotation.y.toFixed(2),fz:r.frozen?1:0,b:+r.burn.toFixed(1)})}}
+    if(send&&(!r.frozen||!r.sentFrozen)){if(r.frozen&&!r.sentFrozen)snap(r);r.sentFrozen=r.frozen;G.net.send(F,{k:'pos',id:r.id,p:g.position.toArray().map(v=>+v.toFixed(2)),yaw:+g.rotation.y.toFixed(2),fz:r.frozen?1:0,b:+r.burn.toFixed(1)})}}
    else{if(r.tp){g.position.lerp(r.tp,Math.min(1,dt*10));g.rotation.y+=(r.tyaw-g.rotation.y)*Math.min(1,dt*10);r.body.pos.copy(g.position)}
     if(performance.now()-r.seen>DESPAWN*1000&&r.idle>DESPAWN)killRig(r,true)}}
   ridingNow=riding;const jE=G.input.jump&&!jPrev;jPrev=!!G.input.jump;if(riding&&jE&&(n(riding.r,'rocket')||n(riding.r,'spring'))){draft=riding.r;launch()}
